@@ -20,6 +20,7 @@
        【3Dブック ── 正面から「本」に見えるデザイン】
     =================================================== */
     .book-scene{height:100vh;position:relative}
+    .book-scene::after{content:'';position:absolute;bottom:0;left:0;right:0;height:30vh;background:linear-gradient(to bottom,transparent,#faf8f5);pointer-events:none;z-index:61}
     .book-stage{
       position:relative;height:100vh;
       display:flex;align-items:center;justify-content:center;
@@ -77,7 +78,7 @@
     .toc-approach.active{pointer-events:auto}
     .toc-label{font-family:'Shippori Mincho B1',serif;font-size:.7rem;color:#5a5550;text-shadow:0 0 12px rgba(250,248,245,.8);letter-spacing:.4em;margin-bottom:1.5rem}
     .toc-title{font-family:'Shippori Mincho B1',serif;font-weight:600;font-size:1.15rem;color:#2a2520;text-shadow:0 0 16px rgba(250,248,245,.9);letter-spacing:.15em;margin-bottom:2rem}
-    .toc-list{list-style:none;width:100%;max-width:320px;background:rgba(250,248,245,.75);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:8px;padding:.5rem 1rem}
+    .toc-list{list-style:none;width:100%;max-width:320px;background:rgba(250,248,245,.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-radius:8px;padding:.5rem 1rem}
     .toc-list li{border-bottom:1px solid #e8e2da}
     .toc-list li:first-child{border-top:1px solid #e8e2da}
     .toc-list a{display:flex;justify-content:space-between;align-items:center;padding:.85rem .5rem;text-decoration:none;font-family:'Shippori Mincho B1',serif;font-size:.85rem;color:#2a2520;letter-spacing:.08em;transition:color .3s}
