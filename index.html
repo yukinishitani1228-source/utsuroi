@@ -401,15 +401,7 @@ function playAnimation(){
   if(bgm){bgm.volume=0.4;bgm.play().catch(()=>{});}
 
   const sfxFlip=document.getElementById('sfx-flip');
-  if(sfxFlip&&!sfxFlip._boosted){
-    var actx=new(window.AudioContext||window.webkitAudioContext)();
-    var src=actx.createMediaElementSource(sfxFlip);
-    var gain=actx.createGain();
-    gain.gain.value=4.0;
-    src.connect(gain);gain.connect(actx.destination);
-    sfxFlip._boosted=true;
-  }
-  if(sfxFlip){setTimeout(()=>{sfxFlip.volume=1.0;sfxFlip.play().catch(()=>{});},800);}
+  if(sfxFlip){setTimeout(()=>{sfxFlip.volume=1.0;sfxFlip.play().catch(()=>{});},1500);}
 
   const duration=5000;
   const startTime=performance.now();
