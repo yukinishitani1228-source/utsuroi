@@ -37,6 +37,9 @@
       transform-style:preserve-3d;
       transform:rotateY(0deg) rotateX(0deg);
     }
+    @media(max-width:480px){
+      .book-3d{width:min(280px,68vw);height:min(400px,52vh)}
+    }
 
     /* ── ページブロック（表紙の後ろに見える紙の束） ──
        表紙より右と下に少しはみ出して「ページの小口」を表現する。
@@ -85,6 +88,10 @@
     .toc-list a{display:flex;justify-content:space-between;align-items:center;padding:.85rem .5rem;text-decoration:none;font-family:'Shippori Mincho B1',serif;font-size:.85rem;color:#2a2520;letter-spacing:.08em;transition:color .3s}
     .toc-list a:hover{color:var(--accent-red)}
     .toc-season{font-size:.65rem;color:#b0a89e;letter-spacing:.12em}
+    @media(max-width:480px){
+      .toc-approach{justify-content:center;padding-bottom:8vh}
+      .toc-list{max-width:240px}
+    }
 
     /* ===================================================
        【表紙 ── 正面からでも「本」に見えるデザイン】
@@ -178,7 +185,7 @@
     }
     .cover-book-title{
       font-family:'Shippori Mincho B1',serif;font-weight:800;
-      font-size:clamp(.85rem,2.4vw,1.3rem);
+      font-size:clamp(1rem,2.4vw,1.3rem);
       color:var(--accent);letter-spacing:.22em;line-height:1.8;
       white-space:nowrap;
       /* 箔押しのキラッと感 */
