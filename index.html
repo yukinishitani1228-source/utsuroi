@@ -172,11 +172,16 @@
     /* ── タイトル（箔押し風） ── */
     .cover-title-wrap{
       writing-mode:vertical-rl;
-      height:auto;max-height:80%;
-      position:relative;z-index:1;
+      /* flex中央寄せに頼らず絶対配置で中央に置く（iOS対策） */
+      position:absolute;
+      top:50%;left:50%;
+      transform:translate(-50%,-50%);
+      z-index:1;
     }
     .cover-book-title{
-      font-family:'Shippori Mincho B1',serif;font-weight:800;
+      /* 端末内蔵の明朝体のみ。非同期フォントを使うとiOSで初回描画されないため */
+      font-family:"Hiragino Mincho ProN","Hiragino Mincho Pro","Yu Mincho",YuMincho,"MS PMincho",serif;
+      font-weight:600;
       font-size:clamp(1rem,2.4vw,1.3rem);
       color:var(--accent);letter-spacing:.22em;line-height:1.8;
       white-space:nowrap;
@@ -209,7 +214,7 @@
 
     .book-shadow{position:absolute;width:85%;height:28px;left:7.5%;bottom:-35px;background:radial-gradient(ellipse,rgba(0,0,0,.35) 0%,transparent 70%);filter:blur(12px);transform:rotateX(90deg);transform-origin:center top}
 
-    .book-scroll-hint{position:absolute;bottom:2.5rem;left:50%;transform:translateX(-50%);color:#b0a89e;font-size:.72rem;letter-spacing:.2em;font-family:'Shippori Mincho B1',serif;animation:pulse 3s ease-in-out infinite;transition:opacity .4s}
+    .book-scroll-hint{position:absolute;bottom:2.5rem;left:50%;transform:translateX(-50%);color:#b0a89e;font-size:.72rem;letter-spacing:.2em;font-family:"Hiragino Mincho ProN","Yu Mincho",YuMincho,serif;animation:pulse 3s ease-in-out infinite;transition:opacity .4s}
     @keyframes pulse{0%,100%{opacity:.3}50%{opacity:.7}}
 
     /* ===================================================
@@ -283,7 +288,6 @@
       .cover-front{padding:1.2rem!important}
       .cover-frame{top:14px!important;left:12px!important;bottom:14px!important;right:36px!important}
       .cover-book-title{font-size:.9rem!important;letter-spacing:.15em!important;line-height:1.6!important}
-      .cover-title-wrap{max-height:90%!important}
       .toc-list{max-width:240px!important}
     }
   </style>
