@@ -439,6 +439,28 @@ bookStage.addEventListener('click',playAnimation);
 // 初期状態
 renderBook(0);
 
+// --- iOS Safari 対策 ---
+// perspective / preserve-3d 配下のテキストは、Webフォントが遅れて確定したときに
+// 合成レイヤーが再ラスタライズされず、タップなどで再描画されるまで空白のままになる。
+// フォント確定後に一度だけ強制的に再描画させる。
+function repaintCoverText(){
+  if(animPlaying||animDone)return;
+  [coverFront,scrollHint].forEach(function(el){
+    if(!el)return;
+    var prev=el.style.opacity;
+    el.style.opacity='0.99';
+    void el.offsetHeight;
+    el.style.opacity=prev;
+  });
+}
+if(document.fonts&&document.fonts.ready){
+  document.fonts.ready.then(function(){
+    requestAnimationFrame(function(){requestAnimationFrame(repaintCoverText)});
+  });
+}
+window.addEventListener('load',repaintCoverText);
+window.addEventListener('pageshow',repaintCoverText);
+
 const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')})},{threshold:.15});
 document.querySelectorAll('.story-section').forEach(s=>obs.observe(s));
 
