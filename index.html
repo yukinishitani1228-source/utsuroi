@@ -363,19 +363,24 @@ function renderBook(progress){
   const tiltY=8*p1*(1-p2);
   const tiltX=2*p1*(1-p2);
 
-  book3d.style.transform='rotateY('+tiltY+'deg) rotateX('+tiltX+'deg)';
+  // ズームイン：本の中に入っていく演出（0%–70%）
+  const zoomRaw=Math.min(progress/0.70,1);
+  const zoom=easeInOut(zoomRaw);
+  const scale=1+zoom*2.5;
+  const perspShift=2200-zoom*1400;
+  bookStage.style.perspective=perspShift+'px';
+  book3d.style.transform='scale('+scale+') rotateY('+tiltY+'deg) rotateX('+tiltX+'deg)';
   coverGroup.style.transform='translateZ(22px) rotateY('+coverAngle+'deg)';
   bookShadow.style.transform='rotateX(90deg) scaleX('+(1+p2*.3)+')';
   bookShadow.style.opacity=Math.max(0,.4-p2*.6);
 
-
-  // 本のフェードアウト：背景が明るくなるにつれて溶ける（30%–75%）
-  const bookFadeRaw=Math.max(0,(progress-0.30)/0.45);
+  // 本のフェードアウト：ズームしながら溶ける（40%–80%）
+  const bookFadeRaw=Math.max(0,(progress-0.40)/0.40);
   const bookFade=easeInOut(Math.min(bookFadeRaw,1));
   book3d.style.opacity=1-bookFade;
 
-  // 目次フェードイン：本が消え始めてから（50%–85%）
-  const tocRaw=Math.max(0,(progress-0.50)/0.35);
+  // 目次フェードイン：本が消え始めてから（55%–90%）
+  const tocRaw=Math.max(0,(progress-0.55)/0.35);
   const tocFade=ease(Math.min(tocRaw,1));
   tocEl.style.opacity=tocFade;
   tocEl.classList.toggle('active',tocFade>0.01);
@@ -396,7 +401,7 @@ function playAnimation(){
   if(bgm){bgm.volume=0.4;bgm.play().catch(()=>{});}
 
 
-  const duration=4000;
+  const duration=5000;
   const startTime=performance.now();
 
   function frame(now){
