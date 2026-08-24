@@ -37,13 +37,6 @@
       transform-style:preserve-3d;
       transform:rotateY(0deg) rotateX(0deg);
     }
-    @media(max-width:480px){
-      .book-3d{width:min(280px,68vw);height:min(400px,52vh)}
-      .cover-front{padding:1.2rem}
-      .cover-frame{top:14px;left:12px;bottom:14px;right:36px}
-      .cover-book-title{font-size:.9rem;letter-spacing:.15em;line-height:1.6}
-      .cover-title-wrap{max-height:90%}
-    }
 
     /* ── ページブロック（表紙の後ろに見える紙の束） ──
        表紙より右と下に少しはみ出して「ページの小口」を表現する。
@@ -92,10 +85,6 @@
     .toc-list a{display:flex;justify-content:space-between;align-items:center;padding:.85rem .5rem;text-decoration:none;font-family:'Shippori Mincho B1',serif;font-size:.85rem;color:#2a2520;letter-spacing:.08em;transition:color .3s}
     .toc-list a:hover{color:var(--accent-red)}
     .toc-season{font-size:.65rem;color:#b0a89e;letter-spacing:.12em}
-    @media(max-width:480px){
-      .toc-approach{justify-content:center;padding-bottom:8vh}
-      .toc-list{max-width:240px}
-    }
 
     /* ===================================================
        【表紙 ── 正面からでも「本」に見えるデザイン】
@@ -289,6 +278,15 @@
       .story-section{opacity:1;transform:none;transition:none}
       .book-scroll-hint{animation:none;opacity:.5}
       .reader-content,.reader-overlay{transition:none}
+    }
+    @media(max-width:480px){
+      .book-3d{width:min(280px,68vw);height:min(400px,52vh)}
+      .cover-front{padding:1.2rem}
+      .cover-frame{top:14px;left:12px;bottom:14px;right:36px}
+      .cover-book-title{font-size:.9rem;letter-spacing:.15em;line-height:1.6}
+      .cover-title-wrap{max-height:90%}
+      .toc-approach{padding-bottom:8vh}
+      .toc-list{max-width:240px}
     }
   </style>
 </head>
