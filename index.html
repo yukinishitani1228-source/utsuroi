@@ -187,6 +187,13 @@
       pointer-events:none;
       z-index:5;
     }
+    /* 静止時はtransformを持たない素の要素。
+       表紙と一緒に回すためのtransformはアニメーション中だけJSで付ける。 */
+    .cover-title-plane{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
     .cover-ornament{
       width:1px;height:40px;margin-top:1.5rem;
       background:linear-gradient(to bottom,var(--accent),transparent);
@@ -333,7 +340,9 @@
   <!-- タイトルとヒントは3D空間の外に置く。
        iOSでは perspective / preserve-3d 配下の子レイヤーが初回描画されないため。 -->
   <div class="cover-title-overlay" id="cover-title-overlay">
-    <canvas id="cover-title-canvas" role="img" aria-label="移ろう空模様、花を紡ぐ"></canvas>
+    <div class="cover-title-plane" id="cover-title-plane">
+      <canvas id="cover-title-canvas" role="img" aria-label="移ろう空模様、花を紡ぐ"></canvas>
+    </div>
   </div>
 
   <div class="book-scroll-hint" id="scroll-hint">tap to open</div>
@@ -360,7 +369,8 @@
 <div class="reader-overlay" id="reader"><div class="reader-header"><span class="reader-chapter-title" id="reader-title"></span><button class="reader-close" id="reader-close" aria-label="閉じる">✕</button></div><div class="reader-body" id="reader-body"><div class="reader-content" id="reader-content"></div></div><div class="reader-footer"><button class="reader-page-btn" id="reader-next" aria-label="次">›</button><span class="reader-indicator" id="reader-indicator"></span><button class="reader-page-btn" id="reader-prev" aria-label="前">‹</button></div></div>
 
 <script>
-const book3d=document.getElementById('book-3d'),coverGroup=document.getElementById('cover-group'),scrollHint=document.getElementById('scroll-hint'),bookShadow=document.getElementById('book-shadow'),tocEl=document.getElementById('toc-approach'),bookStage=document.querySelector('.book-stage'),coverFront=document.querySelector('.cover-front'),coverInner=document.querySelector('.cover-inner'),titleOverlay=document.getElementById('cover-title-overlay');
+const book3d=document.getElementById('book-3d'),coverGroup=document.getElementById('cover-group'),scrollHint=document.getElementById('scroll-hint'),bookShadow=document.getElementById('book-shadow'),tocEl=document.getElementById('toc-approach'),bookStage=document.querySelector('.book-stage'),coverFront=document.querySelector('.cover-front'),coverInner=document.querySelector('.cover-inner'),titleOverlay=document.getElementById('cover-title-overlay'),titlePlane=document.getElementById('cover-title-plane');
+let bookHingeW=0; // 表紙の回転軸（背表紙＝右端）までの距離を出すための本の幅
 function ease(t){return 1-Math.pow(1-t,3)}
 function easeInOut(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2}
 
@@ -388,9 +398,6 @@ function renderBook(progress){
   coverFront.style.opacity=flipped?'0':'1';
   coverInner.style.opacity=flipped?'1':'0';
 
-  // タイトルは表紙が開き始めたら溶けるように消す（5%–22%）
-  const titleFadeRaw=Math.max(0,(progress-0.05)/0.17);
-  titleOverlay.style.opacity=String(1-ease(Math.min(titleFadeRaw,1)));
   bookShadow.style.transform='rotateX(90deg) scaleX('+(1+p2*.3)+')';
   bookShadow.style.opacity=Math.max(0,.4-p2*.6);
 
@@ -398,6 +405,23 @@ function renderBook(progress){
   const bookFadeRaw=Math.max(0,(progress-0.40)/0.40);
   const bookFade=easeInOut(Math.min(bookFadeRaw,1));
   book3d.style.opacity=1-bookFade;
+
+  // タイトルは表紙に印刷されているように、表紙と同じ動きで回す。
+  // 静止時は3D変換を一切かけない（iOSの初回描画対策）。
+  if(progress<=0){
+    titleOverlay.style.perspective='';
+    titlePlane.style.transform='';
+    titleOverlay.style.opacity='1';
+  }else{
+    titleOverlay.style.perspective=perspShift+'px';
+    const hw=bookHingeW/2;
+    // 本の傾き・拡大 → 表紙の開き（軸は右端＝背表紙）
+    titlePlane.style.transform=
+      'scale('+scale+') rotateY('+tiltY+'deg) rotateX('+tiltX+'deg)'+
+      ' translateX('+hw+'px) translateZ(22px) rotateY('+coverAngle+'deg) translateX('+(-hw)+'px)';
+    // 90度を超えたら裏側になるので消す。それ以外は本と一緒にフェード。
+    titleOverlay.style.opacity=flipped?'0':String(1-bookFade);
+  }
 
   // 目次フェードイン：本が消え始めてから（55%–90%）
   const tocRaw=Math.max(0,(progress-0.55)/0.35);
@@ -453,6 +477,7 @@ function drawCoverTitle(){
   const cv=document.getElementById('cover-title-canvas');
   const cover=document.querySelector('.cover-front');
   if(!cv||!cover)return;
+  bookHingeW=book3d.offsetWidth; // 回転軸（右端）までの距離の算出に使う
   const chars=Array.from(COVER_TITLE);
   const dispH=cover.clientHeight*0.50;
   if(dispH<=0)return;
