@@ -185,10 +185,7 @@
       font-size:clamp(1rem,2.4vw,1.3rem);
       color:var(--accent);letter-spacing:.22em;line-height:1.8;
       white-space:nowrap;
-      /* 箔押しのキラッと感 */
-      text-shadow:
-        0 0 15px rgba(196,149,106,.12),
-        0 1px 0 rgba(0,0,0,.3);
+      /* text-shadowはiOSの3D面内でテキストが消える原因になるため使わない */
     }
     .cover-ornament{
       width:1px;height:40px;margin-top:1.5rem;
@@ -447,20 +444,24 @@ renderBook(0);
 // perspective / preserve-3d 配下のテキストは、Webフォントが遅れて確定したときに
 // 合成レイヤーが再ラスタライズされず、タップなどで再描画されるまで空白のままになる。
 // フォント確定後に一度だけ強制的に再描画させる。
+// 同一フレーム内でスタイルを戻すとブラウザに「変化なし」と判断され最適化で消される。
+// タップ時と同じように、複数フレームにわたって実際にtransformを変え続ける必要がある。
 function repaintCoverText(){
   if(animPlaying||animDone)return;
-  [coverFront,scrollHint].forEach(function(el){
-    if(!el)return;
-    var prev=el.style.opacity;
-    el.style.opacity='0.99';
-    void el.offsetHeight;
-    el.style.opacity=prev;
-  });
+  var n=0;
+  (function step(){
+    if(animPlaying||animDone)return;
+    // 目視できない量だけ動かす
+    book3d.style.transform='scale(1) rotateY(0deg) rotateX(0deg) translateZ('+(n%2?0.02:0)+'px)';
+    if(++n<10){
+      requestAnimationFrame(step);
+    }else{
+      renderBook(0);
+    }
+  })();
 }
 if(document.fonts&&document.fonts.ready){
-  document.fonts.ready.then(function(){
-    requestAnimationFrame(function(){requestAnimationFrame(repaintCoverText)});
-  });
+  document.fonts.ready.then(repaintCoverText);
 }
 window.addEventListener('load',repaintCoverText);
 window.addEventListener('pageshow',repaintCoverText);
