@@ -52,36 +52,27 @@
        後表紙の芯紙: z = -16 〜 -25
        ハードカバーなので表紙がページより4px大きい（チリ）。 */
 
-    /* ページ束の前面（表紙を開くと最初に見えるページ） */
+    /* ── ページブロック（表紙の後ろに見える紙の束） ──
+       表紙より左と下にわずかにはみ出させ、階段状の影を重ねて
+       紙が何枚も重なっているように見せる。
+       等間隔の縞にすると定規の目盛りのように見えてしまうため、
+       色差を少しずつ変えた段で表現する。 */
     .page-block{
       position:absolute;
-      inset:0;
-      background:linear-gradient(to left,#e6dfd4,#f4efe8 6%,#f6f2ec);
-      border-radius:1px;
-      transform:translateZ(16px);
-    }
-
-    /* ── 正面から見える紙の層 ──
-       真正面からだと3Dの側面はどの向きにも見えないため、
-       小口の紙を表紙の外にわずかに出して層を見せる。
-       細い縞を重ねて枚数の多さを表現する。 */
-    .page-fore,.page-foot{
-      position:absolute;
-      transform:translateZ(16px);
-    }
-    .page-fore{
-      left:-9px;top:3px;bottom:4px;width:10px;
-      border-radius:2px 0 0 2px;
-      background:
-        linear-gradient(to right,rgba(74,58,38,.22),rgba(74,58,38,.03) 45%,rgba(74,58,38,.13)),
-        repeating-linear-gradient(to bottom,#faf6f0 0px,#faf6f0 .9px,#e1d8ca .9px,#e1d8ca 1.9px);
-    }
-    .page-foot{
-      bottom:-9px;left:-4px;right:3px;height:10px;
-      border-radius:0 0 2px 2px;
-      background:
-        linear-gradient(to bottom,rgba(74,58,38,.22),rgba(74,58,38,.03) 45%,rgba(74,58,38,.13)),
-        repeating-linear-gradient(to right,#faf6f0 0px,#faf6f0 .9px,#e1d8ca .9px,#e1d8ca 1.9px);
+      top:-1px; right:0;
+      left:-6px; bottom:-6px;
+      background:#f2ede6;
+      border-radius:3px 1px 1px 3px;
+      transform:translateZ(-1px);
+      box-shadow:
+        -1px 1px 0 0 #efeae2,
+        -2px 2px 0 0 #ebe5dc,
+        -3px 3px 0 0 #e7e1d7,
+        -4px 4px 0 0 #e3dcd1,
+        -5px 5px 0 0 #ded7cb,
+        -6px 6px 0 0 #d9d1c4,
+        -7px 7px 0 0 #d4cbbd,
+        -8px 8px 0 0 #cfc5b6;
     }
 
     /* 後表紙（裏から透けないように塞ぐ） */
@@ -101,7 +92,7 @@
       transform:translateZ(16px) rotateY(90deg);
       background:
         linear-gradient(to right,rgba(60,45,30,.20),rgba(60,45,30,0) 14%,rgba(60,45,30,0) 84%,rgba(60,45,30,.16)),
-        repeating-linear-gradient(to bottom,#f8f4ed 0px,#f8f4ed .8px,#e3dace .8px,#e3dace 1.7px);
+        repeating-linear-gradient(to bottom,#f7f3ec 0px,#ece5d9 1.1px,#f7f3ec 2.3px);
     }
     .pages-edge-bottom{
       position:absolute;right:0;left:0;bottom:0;height:32px;
@@ -109,7 +100,7 @@
       transform:translateZ(16px) rotateX(90deg);
       background:
         linear-gradient(to bottom,rgba(60,45,30,.20),rgba(60,45,30,0) 14%,rgba(60,45,30,0) 84%,rgba(60,45,30,.16)),
-        repeating-linear-gradient(to right,#f8f4ed 0px,#f8f4ed .8px,#e3dace .8px,#e3dace 1.7px);
+        repeating-linear-gradient(to right,#f7f3ec 0px,#ece5d9 1.1px,#f7f3ec 2.3px);
     }
     .pages-edge-top{
       position:absolute;right:0;left:0;top:0;height:32px;
@@ -117,7 +108,7 @@
       transform:translateZ(16px) rotateX(-90deg);
       background:
         linear-gradient(to top,rgba(60,45,30,.20),rgba(60,45,30,0) 14%,rgba(60,45,30,0) 84%,rgba(60,45,30,.16)),
-        repeating-linear-gradient(to right,#f8f4ed 0px,#f8f4ed .8px,#e3dace .8px,#e3dace 1.7px);
+        repeating-linear-gradient(to right,#f7f3ec 0px,#ece5d9 1.1px,#f7f3ec 2.3px);
     }
 
     /* 背表紙：前表紙から後表紙まで通しで覆う（50px） */
@@ -235,11 +226,10 @@
           #1e1a2c 100%
         );
 
-      /* 左に強い影を落とすと小口の紙が影に沈んで見えなくなるため、
-         外側の影は下方向のみにする。浮遊感は .book-shadow が担う。 */
       box-shadow:
-        0 10px 26px rgba(0,0,0,.24),
-        0 3px 8px rgba(0,0,0,.16),
+        -4px 6px 24px rgba(0,0,0,.5),
+        -2px 3px 8px rgba(0,0,0,.3),
+        0 1px 3px rgba(0,0,0,.2),
         inset -18px 0 14px -12px rgba(0,0,0,.3),
         inset 1px 0 1px rgba(255,255,255,.03),
         inset 0 1px 0 rgba(255,255,255,.02),
@@ -343,7 +333,7 @@
       background:linear-gradient(to top,#0d0a12,#221d30 45%,#18141f);
     }
 
-    .book-shadow{position:absolute;width:92%;height:36px;left:4%;bottom:-42px;background:radial-gradient(ellipse,rgba(0,0,0,.42) 0%,rgba(0,0,0,.18) 45%,transparent 72%);filter:blur(14px);transform:rotateX(90deg);transform-origin:center top}
+    .book-shadow{position:absolute;width:85%;height:28px;left:7.5%;bottom:-35px;background:radial-gradient(ellipse,rgba(0,0,0,.35) 0%,transparent 70%);filter:blur(12px);transform:rotateX(90deg);transform-origin:center top}
 
     .book-scroll-hint{position:absolute;bottom:2.5rem;left:50%;transform:translateX(-50%);color:#b0a89e;font-size:.72rem;letter-spacing:.2em;font-family:"Hiragino Mincho ProN","Yu Mincho",YuMincho,serif;animation:pulse 3s ease-in-out infinite;transition:opacity .4s;pointer-events:none}
     @keyframes pulse{0%,100%{opacity:.3}50%{opacity:.7}}
@@ -449,9 +439,6 @@
       <!-- ページ束の前面 -->
       <div class="page-block"></div>
 
-      <!-- 正面から見える紙の層（小口・地） -->
-      <div class="page-fore"></div>
-      <div class="page-foot"></div>
 
       <!-- ページ側面 -->
       <div class="pages-edge-left"></div>
