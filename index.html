@@ -218,8 +218,11 @@
 
     .book-shadow{position:absolute;width:85%;height:28px;left:7.5%;bottom:-35px;background:radial-gradient(ellipse,rgba(0,0,0,.35) 0%,transparent 70%);filter:blur(12px);transform:rotateX(90deg);transform-origin:center top}
 
-    .book-scroll-hint{position:absolute;bottom:2.5rem;left:50%;transform:translateX(-50%);color:#b0a89e;font-size:.72rem;letter-spacing:.2em;font-family:"Hiragino Mincho ProN","Yu Mincho",YuMincho,serif;animation:pulse 3s ease-in-out infinite;transition:opacity .4s}
+    .book-scroll-hint{position:absolute;bottom:2.5rem;left:50%;transform:translateX(-50%);color:#b0a89e;font-size:.72rem;letter-spacing:.2em;font-family:"Hiragino Mincho ProN","Yu Mincho",YuMincho,serif;animation:pulse 3s ease-in-out infinite;transition:opacity .4s;pointer-events:none}
     @keyframes pulse{0%,100%{opacity:.3}50%{opacity:.7}}
+    /* CSSアニメーションはインラインのopacityより優先されるため、
+       隠すときはアニメーション自体を止める必要がある */
+    .book-scroll-hint.is-hidden{animation:none;opacity:0}
 
     /* ===================================================
        【各章セクション】
@@ -429,7 +432,7 @@ function renderBook(progress){
   tocEl.style.opacity=tocFade;
   tocEl.classList.toggle('active',tocFade>0.01);
 
-  scrollHint.style.opacity=progress>.06?'0':'';
+  scrollHint.classList.toggle('is-hidden',progress>.06);
 }
 
 // --- タップ/クリックで発動 ---
@@ -460,7 +463,7 @@ function setVolume(el,gain){
 function playAnimation(){
   if(animPlaying||animDone)return;
   animPlaying=true;
-  scrollHint.style.opacity='0';
+  scrollHint.classList.add('is-hidden');
 
   const sfxFlip=document.getElementById('sfx-flip');
   if(sfxFlip){setVolume(sfxFlip,0.7);setTimeout(()=>{sfxFlip.play().catch(()=>{});},1500);}
