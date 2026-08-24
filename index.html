@@ -55,11 +55,33 @@
     /* ページ束の前面（表紙を開くと最初に見えるページ） */
     .page-block{
       position:absolute;
-      top:4px; right:0;
-      left:4px; bottom:4px;
+      inset:0;
       background:linear-gradient(to left,#e6dfd4,#f4efe8 6%,#f6f2ec);
       border-radius:1px;
       transform:translateZ(16px);
+    }
+
+    /* ── 正面から見える紙の層 ──
+       真正面からだと3Dの側面はどの向きにも見えないため、
+       小口の紙を表紙の外にわずかに出して層を見せる。
+       細い縞を重ねて枚数の多さを表現する。 */
+    .page-fore,.page-foot{
+      position:absolute;
+      transform:translateZ(16px);
+    }
+    .page-fore{
+      left:-9px;top:3px;bottom:4px;width:10px;
+      border-radius:2px 0 0 2px;
+      background:
+        linear-gradient(to right,rgba(74,58,38,.22),rgba(74,58,38,.03) 45%,rgba(74,58,38,.13)),
+        repeating-linear-gradient(to bottom,#faf6f0 0px,#faf6f0 .9px,#e1d8ca .9px,#e1d8ca 1.9px);
+    }
+    .page-foot{
+      bottom:-9px;left:-4px;right:3px;height:10px;
+      border-radius:0 0 2px 2px;
+      background:
+        linear-gradient(to bottom,rgba(74,58,38,.22),rgba(74,58,38,.03) 45%,rgba(74,58,38,.13)),
+        repeating-linear-gradient(to right,#faf6f0 0px,#faf6f0 .9px,#e1d8ca .9px,#e1d8ca 1.9px);
     }
 
     /* 後表紙（裏から透けないように塞ぐ） */
@@ -74,7 +96,7 @@
        細い横縞を重ねて紙が何百枚も重なって見えるようにする。
        両端の暗いグラデーションで束の丸みを出す。 */
     .pages-edge-left{
-      position:absolute;top:5px;bottom:5px;left:4px;width:32px;
+      position:absolute;top:0;bottom:0;left:0;width:32px;
       transform-origin:left center;
       transform:translateZ(16px) rotateY(90deg);
       background:
@@ -82,7 +104,7 @@
         repeating-linear-gradient(to bottom,#f8f4ed 0px,#f8f4ed .8px,#e3dace .8px,#e3dace 1.7px);
     }
     .pages-edge-bottom{
-      position:absolute;right:0;left:4px;bottom:4px;height:32px;
+      position:absolute;right:0;left:0;bottom:0;height:32px;
       transform-origin:center bottom;
       transform:translateZ(16px) rotateX(90deg);
       background:
@@ -90,7 +112,7 @@
         repeating-linear-gradient(to right,#f8f4ed 0px,#f8f4ed .8px,#e3dace .8px,#e3dace 1.7px);
     }
     .pages-edge-top{
-      position:absolute;right:0;left:4px;top:4px;height:32px;
+      position:absolute;right:0;left:0;top:0;height:32px;
       transform-origin:center top;
       transform:translateZ(16px) rotateX(-90deg);
       background:
@@ -213,10 +235,11 @@
           #1e1a2c 100%
         );
 
+      /* 左に強い影を落とすと小口の紙が影に沈んで見えなくなるため、
+         外側の影は下方向のみにする。浮遊感は .book-shadow が担う。 */
       box-shadow:
-        -4px 6px 24px rgba(0,0,0,.5),
-        -2px 3px 8px rgba(0,0,0,.3),
-        0 1px 3px rgba(0,0,0,.2),
+        0 10px 26px rgba(0,0,0,.24),
+        0 3px 8px rgba(0,0,0,.16),
         inset -18px 0 14px -12px rgba(0,0,0,.3),
         inset 1px 0 1px rgba(255,255,255,.03),
         inset 0 1px 0 rgba(255,255,255,.02),
@@ -425,6 +448,10 @@
 
       <!-- ページ束の前面 -->
       <div class="page-block"></div>
+
+      <!-- 正面から見える紙の層（小口・地） -->
+      <div class="page-fore"></div>
+      <div class="page-foot"></div>
 
       <!-- ページ側面 -->
       <div class="pages-edge-left"></div>
