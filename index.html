@@ -170,13 +170,16 @@
     }
 
     /* ── タイトル（箔押し風） ──
-       iOSでは perspective / preserve-3d 配下のDOMテキストが初回描画されない
-       ことがあるため、canvasに描画してビットマップとして扱う。 */
-    .cover-title-canvas{
+       3D空間の外に置き、本の上に重ねる。transformもz-indexも使わない
+       素の要素にすることで、iOSの合成バグを完全に回避する。 */
+    .cover-title-overlay{
       position:absolute;
-      top:50%;left:50%;
-      transform:translate(-50%,-50%);
-      z-index:1;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      pointer-events:none;
+      z-index:5;
     }
     .cover-ornament{
       width:1px;height:40px;margin-top:1.5rem;
@@ -300,7 +303,6 @@
       <div class="cover-group" id="cover-group">
         <div class="cover-front">
           <div class="cover-frame"></div>
-          <canvas class="cover-title-canvas" id="cover-title-canvas" role="img" aria-label="移ろう空模様、花を紡ぐ"></canvas>
         </div>
         <div class="cover-inner"></div>
         <div class="cover-edge-left"></div>
@@ -321,8 +323,15 @@
       </ul>
     </div>
 
-    <div class="book-scroll-hint" id="scroll-hint">tap to open</div>
   </div>
+
+  <!-- タイトルとヒントは3D空間の外に置く。
+       iOSでは perspective / preserve-3d 配下の子レイヤーが初回描画されないため。 -->
+  <div class="cover-title-overlay" id="cover-title-overlay">
+    <canvas id="cover-title-canvas" role="img" aria-label="移ろう空模様、花を紡ぐ"></canvas>
+  </div>
+
+  <div class="book-scroll-hint" id="scroll-hint">tap to open</div>
 </div>
 
 <!-- 各章 -->
@@ -346,7 +355,7 @@
 <div class="reader-overlay" id="reader"><div class="reader-header"><span class="reader-chapter-title" id="reader-title"></span><button class="reader-close" id="reader-close" aria-label="閉じる">✕</button></div><div class="reader-body" id="reader-body"><div class="reader-content" id="reader-content"></div></div><div class="reader-footer"><button class="reader-page-btn" id="reader-next" aria-label="次">›</button><span class="reader-indicator" id="reader-indicator"></span><button class="reader-page-btn" id="reader-prev" aria-label="前">‹</button></div></div>
 
 <script>
-const book3d=document.getElementById('book-3d'),coverGroup=document.getElementById('cover-group'),scrollHint=document.getElementById('scroll-hint'),bookShadow=document.getElementById('book-shadow'),tocEl=document.getElementById('toc-approach'),bookStage=document.querySelector('.book-stage'),coverFront=document.querySelector('.cover-front'),coverInner=document.querySelector('.cover-inner');
+const book3d=document.getElementById('book-3d'),coverGroup=document.getElementById('cover-group'),scrollHint=document.getElementById('scroll-hint'),bookShadow=document.getElementById('book-shadow'),tocEl=document.getElementById('toc-approach'),bookStage=document.querySelector('.book-stage'),coverFront=document.querySelector('.cover-front'),coverInner=document.querySelector('.cover-inner'),titleOverlay=document.getElementById('cover-title-overlay');
 function ease(t){return 1-Math.pow(1-t,3)}
 function easeInOut(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2}
 
@@ -373,6 +382,10 @@ function renderBook(progress){
   const flipped=coverAngle>90;
   coverFront.style.opacity=flipped?'0':'1';
   coverInner.style.opacity=flipped?'1':'0';
+
+  // タイトルは表紙が開き始めたら溶けるように消す（5%–22%）
+  const titleFadeRaw=Math.max(0,(progress-0.05)/0.17);
+  titleOverlay.style.opacity=String(1-ease(Math.min(titleFadeRaw,1)));
   bookShadow.style.transform='rotateX(90deg) scaleX('+(1+p2*.3)+')';
   bookShadow.style.opacity=Math.max(0,.4-p2*.6);
 
@@ -470,31 +483,6 @@ window.addEventListener('pageshow',drawCoverTitle);
 // 初期状態
 renderBook(0);
 
-// --- iOS Safari 対策 ---
-// perspective / preserve-3d 配下のテキストは、Webフォントが遅れて確定したときに
-// 合成レイヤーが再ラスタライズされず、タップなどで再描画されるまで空白のままになる。
-// フォント確定後に一度だけ強制的に再描画させる。
-// 同一フレーム内でスタイルを戻すとブラウザに「変化なし」と判断され最適化で消される。
-// タップ時と同じように、複数フレームにわたって実際にtransformを変え続ける必要がある。
-function repaintCoverText(){
-  if(animPlaying||animDone)return;
-  var n=0;
-  (function step(){
-    if(animPlaying||animDone)return;
-    // 目視できない量だけ動かす
-    book3d.style.transform='scale(1) rotateY(0deg) rotateX(0deg) translateZ('+(n%2?0.02:0)+'px)';
-    if(++n<10){
-      requestAnimationFrame(step);
-    }else{
-      renderBook(0);
-    }
-  })();
-}
-if(document.fonts&&document.fonts.ready){
-  document.fonts.ready.then(repaintCoverText);
-}
-window.addEventListener('load',repaintCoverText);
-window.addEventListener('pageshow',repaintCoverText);
 
 const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')})},{threshold:.15});
 document.querySelectorAll('.story-section').forEach(s=>obs.observe(s));
