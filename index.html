@@ -70,7 +70,8 @@
     .toc-approach{
       position:absolute;
       inset:0;
-      background:transparent;
+      background:rgba(250,248,245,.85);
+      backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
       display:flex;flex-direction:column;
       align-items:center;justify-content:center;
       opacity:0;
@@ -79,14 +80,14 @@
       z-index:60;
     }
     .toc-approach.active{pointer-events:auto}
-    .toc-label{font-family:'Shippori Mincho B1',serif;font-size:.7rem;color:#b0a89e;letter-spacing:.4em;margin-bottom:1.5rem}
+    .toc-label{font-family:'Shippori Mincho B1',serif;font-size:.7rem;color:#8a8279;letter-spacing:.4em;margin-bottom:1.5rem}
     .toc-title{font-family:'Shippori Mincho B1',serif;font-weight:600;font-size:1.15rem;color:#2a2520;letter-spacing:.15em;margin-bottom:2rem}
     .toc-list{list-style:none;width:100%;max-width:280px}
     .toc-list li{border-bottom:1px solid #e8e2da}
     .toc-list li:first-child{border-top:1px solid #e8e2da}
     .toc-list a{display:flex;justify-content:space-between;align-items:center;padding:.85rem .5rem;text-decoration:none;font-family:'Shippori Mincho B1',serif;font-size:.85rem;color:#2a2520;letter-spacing:.08em;transition:color .3s}
     .toc-list a:hover{color:var(--accent-red)}
-    .toc-season{font-size:.65rem;color:#b0a89e;letter-spacing:.12em}
+    .toc-season{font-size:.65rem;color:#8a8279;letter-spacing:.12em}
 
     /* ===================================================
        【表紙 ── 正面からでも「本」に見えるデザイン】
