@@ -436,16 +436,37 @@ function renderBook(progress){
 let animPlaying=false;
 let animDone=false;
 
+// iOSでは audio.volume が無視され常に最大音量で鳴るため、
+// Web Audio の GainNode を通して音量を制御する。
+let audioCtx=null;
+function setVolume(el,gain){
+  if(!el)return;
+  if(el._gain){el._gain.gain.value=gain;return;}
+  const AC=window.AudioContext||window.webkitAudioContext;
+  if(!AC){el.volume=gain;return;}
+  try{
+    audioCtx=audioCtx||new AC();
+    if(audioCtx.state==='suspended')audioCtx.resume();
+    const g=audioCtx.createGain();
+    g.gain.value=gain;
+    audioCtx.createMediaElementSource(el).connect(g);
+    g.connect(audioCtx.destination);
+    el._gain=g;
+  }catch(e){
+    el.volume=gain; // Web Audioが使えない環境向けの保険
+  }
+}
+
 function playAnimation(){
   if(animPlaying||animDone)return;
   animPlaying=true;
   scrollHint.style.opacity='0';
 
   const sfxFlip=document.getElementById('sfx-flip');
-  if(sfxFlip){setTimeout(()=>{sfxFlip.volume=1.0;sfxFlip.play().catch(()=>{});},1500);}
+  if(sfxFlip){setTimeout(()=>{sfxFlip.play().catch(()=>{});},1500);}
 
   const bgm=document.getElementById('bgm');
-  if(bgm){setTimeout(()=>{bgm.volume=0.4;bgm.play().catch(()=>{});},3000);}
+  if(bgm){setVolume(bgm,0.4);setTimeout(()=>{bgm.play().catch(()=>{});},3000);}
 
   const duration=5000;
   const startTime=performance.now();
