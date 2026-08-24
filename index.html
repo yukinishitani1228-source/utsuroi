@@ -29,14 +29,20 @@
       background:var(--bg-void);
     }
 
-    /* 本全体のコンテナ。最初は正面を向いている */
+    /* 本全体のコンテナ。最初は正面を向いている。
+       幅と高さが別々に頭打ちになると縦横比が崩れるため、
+       幅だけを決めて高さは縦横比から導く（380:540を常に維持）。 */
     .book-3d{
       position:relative;
-      width:min(380px,72vw);
+      width:min(380px,72vw,calc(68vh * 0.7037));
+      width:min(380px,72vw,calc(68dvh * 0.7037));
       height:min(540px,68vh);
       height:min(540px,68dvh);
       transform-style:preserve-3d;
       transform:rotateY(0deg) rotateX(0deg);
+    }
+    @supports (aspect-ratio:1){
+      .book-3d{aspect-ratio:380/540;height:auto}
     }
 
     /* ── ページブロック（表紙の後ろに見える紙の束） ──
@@ -275,7 +281,6 @@
       .reader-content,.reader-overlay{transition:none}
     }
     @media(max-width:480px){
-      .book-3d{width:min(280px,68vw)!important;height:min(400px,52dvh)!important}
       .cover-front{padding:1.2rem!important}
       .cover-frame{top:14px!important;left:12px!important;bottom:14px!important;right:36px!important}
       .toc-list{max-width:240px!important}
