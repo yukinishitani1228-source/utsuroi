@@ -397,11 +397,11 @@ function playAnimation(){
   animPlaying=true;
   scrollHint.style.opacity='0';
 
-  const bgm=document.getElementById('bgm');
-  if(bgm){bgm.volume=0.4;bgm.play().catch(()=>{});}
-
   const sfxFlip=document.getElementById('sfx-flip');
   if(sfxFlip){setTimeout(()=>{sfxFlip.volume=1.0;sfxFlip.play().catch(()=>{});},1500);}
+
+  const bgm=document.getElementById('bgm');
+  if(bgm){setTimeout(()=>{bgm.volume=0.4;bgm.play().catch(()=>{});},3000);}
 
   const duration=5000;
   const startTime=performance.now();
