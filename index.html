@@ -62,7 +62,7 @@
       top:-1px; right:0;
       left:-6px; bottom:-6px;
       background:#f2ede6;
-      border-radius:3px 1px 1px 3px;
+      border-radius:3px 0 0 3px;
       transform:translateZ(-1px);
       box-shadow:
         -1px 1px 0 0 #efeae2,
@@ -79,7 +79,7 @@
     .cover-back{
       position:absolute;inset:0;
       background:linear-gradient(to left,#14101c,#1c1828);
-      border-radius:3px 5px 5px 3px;
+      border-radius:0 5px 5px 0;
       transform:translateZ(-25px) rotateY(180deg);
     }
 
@@ -118,7 +118,8 @@
       transform:translateZ(25px) rotateY(90deg);
       background:linear-gradient(to left,
         #0b0810 0%,#0e0b14 6%,#1a1624 22%,#221d30 50%,#1a1624 78%,#0e0b14 94%,#0b0810 100%);
-      border-radius:2px;
+      /* 表紙側の角が丸いと背表紙との間に隙間ができるため直角にする */
+      border-radius:0;
     }
 
     .toc-approach{
@@ -210,7 +211,7 @@
 
     .cover-front{
       position:absolute;inset:0;
-      border-radius:5px 3px 3px 5px;
+      border-radius:5px 0 0 5px;
       display:flex;flex-direction:column;align-items:center;justify-content:center;
       text-align:center;padding:2.5rem;
 
@@ -260,7 +261,7 @@
         rgba(255,255,255,.05) 30%,
         transparent 100%
       );
-      border-radius:0 3px 3px 0;
+      border-radius:0;
     }
 
     .cover-frame{
@@ -310,7 +311,7 @@
     .cover-inner{
       position:absolute;inset:0;
       background:linear-gradient(225deg,#f0ebe4,#e8e2da);
-      border-radius:3px 5px 5px 3px;
+      border-radius:0 5px 5px 0;
       transform:rotateY(180deg);opacity:0;
       box-shadow:inset 0 0 40px rgba(0,0,0,.03);
     }
