@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>移ろう空模様、花を紡ぐ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600;800&family=Zen+Kaku+Gothic+New:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg-void:#faf8f5;--bg-card:#161625;--accent:#c4956a;--accent-red:#944b5a;
+      --text-main:#d4cdc4;--text-sub:#7a7588;--text-dim:#3a3648;--border:#1e1e30;
+    }
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{background:var(--bg-void);color:var(--text-main);font-family:'Zen Kaku Gothic New',sans-serif;font-weight:300;line-height:1.9;letter-spacing:.03em;overflow:hidden}
+
+/* ===================================================
+       【3Dブック ── 正面から「本」に見えるデザイン】
+    =================================================== */
+    .book-scene{height:100vh;position:relative}
+    .book-stage{
+      position:relative;height:100vh;
+      display:flex;align-items:center;justify-content:center;
+      perspective:2200px;
+      overflow:hidden;
+      background:var(--bg-void);
+      transition:background 0s;
+    }
+
+    /* 本全体のコンテナ。最初は正面を向いている */
+    .book-3d{
+      position:relative;
+      width:min(380px,72vw);
+      height:min(540px,68vh);
+      transform-style:preserve-3d;
+      transform:rotateY(0deg) rotateX(0deg);
+    }
+
+    /* ── ページブロック（表紙の後ろに見える紙の束） ──
+       表紙より右と下に少しはみ出して「ページの小口」を表現する。
+       box-shadowで紙が何層も重なっている感じを出す。 */
+    .page-block{
+      position:absolute;
+      top:-1px; right:0;
+      left:-5px; bottom:-5px;
+      background:#f0ebe4;
+      border-radius:3px 1px 1px 3px;
+      transform:translateZ(-1px);
+      box-shadow:
+        -1px 1px 0 0 #ede8e0,
+        -2px 2px 0 0 #eae4dc,
+        -3px 3px 0 0 #e7e1d8,
+        -4px 4px 0 0 #e4ded4,
+        -5px 5px 0 0 #e0dad0,
+        -6px 6px 0 0 #ddd6cc,
+        -7px 7px 0 0 #dad3c8;
+    }
+
+    /* ページ側面（右綴じ：小口は左側） */
+    .pages-edge-left{position:absolute;top:2px;bottom:5px;left:4px;width:22px;transform-origin:left center;transform:rotateY(90deg);background:repeating-linear-gradient(to bottom,#f5f0e8 0px,#f5f0e8 1.5px,#ede7de 1.5px,#ede7de 3px);border:1px solid #e0d8cc}
+    .pages-edge-bottom{position:absolute;right:1px;left:5px;bottom:4px;height:22px;transform-origin:center bottom;transform:rotateX(90deg);background:repeating-linear-gradient(to right,#f5f0e8 0px,#f5f0e8 1.5px,#ede7de 1.5px,#ede7de 3px);border:1px solid #e0d8cc}
+    .pages-edge-top{position:absolute;right:1px;left:5px;top:0;height:22px;transform-origin:center top;transform:rotateX(-90deg);background:repeating-linear-gradient(to right,#f5f0e8 0px,#f5f0e8 1.5px,#ede7de 1.5px,#ede7de 3px);border:1px solid #e0d8cc}
+    .book-spine{position:absolute;right:0;top:0;width:22px;height:100%;transform-origin:right center;transform:rotateY(90deg);background:linear-gradient(to left,#0e0b14,#16121e 40%,#1a1622);border-radius:0 2px 2px 0}
+
+    .toc-approach{
+      position:absolute;
+      inset:0;
+      background:transparent;
+      display:flex;flex-direction:column;
+      align-items:center;justify-content:center;
+      opacity:0;
+      pointer-events:none;
+      overflow:hidden;
+      z-index:60;
+    }
+    .toc-approach.active{pointer-events:auto}
+    .toc-label{font-family:'Shippori Mincho B1',serif;font-size:.7rem;color:#b0a89e;letter-spacing:.4em;margin-bottom:1.5rem}
+    .toc-title{font-family:'Shippori Mincho B1',serif;font-weight:600;font-size:1.15rem;color:#2a2520;letter-spacing:.15em;margin-bottom:2rem}
+    .toc-list{list-style:none;width:100%;max-width:280px}
+    .toc-list li{border-bottom:1px solid #e8e2da}
+    .toc-list li:first-child{border-top:1px solid #e8e2da}
+    .toc-list a{display:flex;justify-content:space-between;align-items:center;padding:.85rem .5rem;text-decoration:none;font-family:'Shippori Mincho B1',serif;font-size:.85rem;color:#2a2520;letter-spacing:.08em;transition:color .3s}
+    .toc-list a:hover{color:var(--accent-red)}
+    .toc-season{font-size:.65rem;color:#b0a89e;letter-spacing:.12em}
+
+    /* ===================================================
+       【表紙 ── 正面からでも「本」に見えるデザイン】
+       ・左端に背表紙の丸み＋溝（ちょうつがい）を再現
+       ・布張り風の質感
+       ・箔押し風のタイトル
+       ・全体に深い影で浮遊感
+    =================================================== */
+    .cover-group{
+      position:absolute;inset:0;
+      transform-style:preserve-3d;
+      transform-origin:right center;
+      transform:translateZ(22px) rotateY(0deg);
+    }
+
+    .cover-front{
+      position:absolute;inset:0;
+      border-radius:5px 3px 3px 5px;
+      backface-visibility:hidden;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      text-align:center;padding:2.5rem;
+      overflow:hidden;
+
+      background:
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"),
+        linear-gradient(to left,
+          #0c0a12 0%,
+          #12101a 2%,
+          #16121f 3.5%,
+          #1a1624 5%,
+          #1c1828 6.5%,
+          #1e1a2c 8%,
+          #1e1a2c 100%
+        );
+
+      box-shadow:
+        -4px 6px 24px rgba(0,0,0,.5),
+        -2px 3px 8px rgba(0,0,0,.3),
+        0 1px 3px rgba(0,0,0,.2),
+        inset -18px 0 14px -12px rgba(0,0,0,.3),
+        inset 1px 0 1px rgba(255,255,255,.03),
+        inset 0 1px 0 rgba(255,255,255,.02),
+        inset 0 -1px 0 rgba(0,0,0,.15);
+    }
+
+    /* 背表紙の溝線（右側） */
+    .cover-front::before{
+      content:'';position:absolute;
+      right:28px;top:6px;bottom:6px;
+      width:1.5px;
+      background:linear-gradient(to bottom,
+        transparent 0%,
+        rgba(0,0,0,.15) 10%,
+        rgba(0,0,0,.3) 50%,
+        rgba(0,0,0,.15) 90%,
+        transparent 100%
+      );
+      box-shadow:1px 0 0 rgba(255,255,255,.02);
+    }
+
+    /* 背表紙側の丸みハイライト（右側） */
+    .cover-front::after{
+      content:'';position:absolute;
+      right:0;top:0;bottom:0;width:25px;
+      background:linear-gradient(to left,
+        rgba(255,255,255,.03) 0%,
+        rgba(255,255,255,.05) 30%,
+        transparent 100%
+      );
+      border-radius:0 3px 3px 0;
+    }
+
+    .cover-frame{
+      position:absolute;
+      top:24px;left:20px;bottom:24px;right:48px;
+      border:1px solid rgba(196,149,106,.15);
+      border-radius:2px;
+      pointer-events:none;
+    }
+    .cover-frame::before{
+      content:'';position:absolute;inset:4px;
+      border:1px solid rgba(196,149,106,.07);
+      border-radius:1px;
+    }
+
+    /* ── タイトル（箔押し風） ── */
+    .cover-title-wrap{
+      writing-mode:vertical-rl;
+      height:auto;max-height:80%;
+      position:relative;z-index:1;
+    }
+    .cover-book-title{
+      font-family:'Shippori Mincho B1',serif;font-weight:800;
+      font-size:clamp(.85rem,2.4vw,1.3rem);
+      color:var(--accent);letter-spacing:.22em;line-height:1.8;
+      white-space:nowrap;
+      /* 箔押しのキラッと感 */
+      text-shadow:
+        0 0 15px rgba(196,149,106,.12),
+        0 1px 0 rgba(0,0,0,.3);
+    }
+    .cover-ornament{
+      width:1px;height:40px;margin-top:1.5rem;
+      background:linear-gradient(to bottom,var(--accent),transparent);
+      opacity:.3;
+    }
+    .cover-author{
+      font-family:'Shippori Mincho B1',serif;font-size:.68rem;
+      color:var(--text-sub);letter-spacing:.28em;margin-top:1.2rem;
+      writing-mode:vertical-rl;position:relative;z-index:1;
+      text-shadow:0 1px 0 rgba(0,0,0,.3);
+    }
+
+    .cover-inner{
+      position:absolute;inset:0;
+      background:linear-gradient(225deg,#f0ebe4,#e8e2da);
+      border-radius:3px 5px 5px 3px;
+      backface-visibility:hidden;transform:rotateY(180deg);
+      box-shadow:inset 0 0 40px rgba(0,0,0,.03);
+    }
+    .cover-edge-left{position:absolute;top:0;left:0;bottom:0;width:4px;transform-origin:left center;transform:rotateY(90deg);background:#16121e;backface-visibility:hidden}
+    .cover-edge-bottom{position:absolute;left:0;right:0;bottom:0;height:4px;transform-origin:center bottom;transform:rotateX(90deg);background:#14101c;backface-visibility:hidden}
+
+    .book-shadow{position:absolute;width:85%;height:28px;left:7.5%;bottom:-35px;background:radial-gradient(ellipse,rgba(0,0,0,.35) 0%,transparent 70%);filter:blur(12px);transform:rotateX(90deg);transform-origin:center top}
+
+    .book-scroll-hint{position:absolute;bottom:2.5rem;left:50%;transform:translateX(-50%);color:#b0a89e;font-size:.72rem;letter-spacing:.2em;font-family:'Shippori Mincho B1',serif;animation:pulse 3s ease-in-out infinite;transition:opacity .4s}
+    @keyframes pulse{0%,100%{opacity:.3}50%{opacity:.7}}
+
+    /* ===================================================
+       【各章セクション】
+    =================================================== */
+    .story-section{min-height:100vh;padding:8rem 1.5rem 6rem;display:flex;justify-content:center;position:relative;opacity:0;transform:translateY(30px);transition:opacity .8s ease,transform .8s ease;background:#faf8f5}
+    .story-section.visible{opacity:1;transform:translateY(0)}
+    .story-section::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:1px;height:80px;background:linear-gradient(to bottom,transparent,#e0dbd4)}
+    .story-inner{max-width:720px;width:100%}
+    .season-label{font-family:'Shippori Mincho B1',serif;font-size:.7rem;color:#b0a89e;letter-spacing:.4em;margin-bottom:1rem}
+    .story-title{font-family:'Shippori Mincho B1',serif;font-weight:600;font-size:clamp(1.4rem,3.5vw,2rem);color:#2a2520;letter-spacing:.12em;margin-bottom:2.5rem}
+    .player-card{display:flex;gap:1.5rem;align-items:flex-start;background:#f0ebe4;border:1px solid #e0dbd4;border-radius:6px;padding:1.5rem;margin-bottom:2rem}
+    .jacket-art{width:140px;height:140px;min-width:140px;border-radius:4px;overflow:hidden;background:#e8e2da;border:1px solid #d8d3cb;display:flex;align-items:center;justify-content:center}
+    .jacket-art img{width:100%;height:100%;object-fit:cover}
+    .jacket-placeholder{color:#b0a89e;font-family:'Shippori Mincho B1',serif;font-size:.7rem;letter-spacing:.1em;text-align:center;line-height:1.5}
+    .player-info{flex:1;display:flex;flex-direction:column;gap:.6rem}
+    .track-title{font-family:'Shippori Mincho B1',serif;font-size:.9rem;color:#2a2520;letter-spacing:.08em}
+    .track-artist{font-size:.75rem;color:#8a8279}
+    .audio-controls{display:flex;align-items:center;gap:.8rem;margin-top:.5rem}
+    .play-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--accent-red);background:transparent;color:var(--accent-red);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .3s;flex-shrink:0}
+    .play-btn:hover{background:var(--accent-red);color:#fff}
+    .play-btn svg{width:14px;height:14px;fill:currentColor}
+    .progress-bar{flex:1;height:2px;background:#d8d3cb;border-radius:1px;cursor:pointer}
+    .progress-fill{height:100%;background:var(--accent-red);border-radius:1px;width:0%}
+    .time-display{font-size:.65rem;color:#8a8279;min-width:70px;text-align:right;font-variant-numeric:tabular-nums}
+    .preview-card{background:#f0ebe4;border:1px solid #e0dbd4;border-radius:6px;padding:2rem;cursor:pointer;overflow:hidden;transition:border-color .4s}
+    .preview-card:hover{border-color:var(--accent-red)}
+    .preview-text{font-family:'Shippori Mincho B1',serif;font-size:.9rem;line-height:1.9;color:#2a2520;writing-mode:vertical-rl;height:200px;overflow:hidden;-webkit-mask-image:linear-gradient(to left,black 50%,transparent 100%);mask-image:linear-gradient(to left,black 50%,transparent 100%)}
+    .preview-text p{text-indent:1em;margin-left:.6em}
+    .preview-cta{display:flex;align-items:center;justify-content:center;gap:.5rem;margin-top:1.2rem;font-family:'Shippori Mincho B1',serif;font-size:.8rem;color:var(--accent-red);letter-spacing:.15em}
+    .preview-cta svg{width:14px;height:14px;fill:var(--accent-red);transition:transform .3s}
+    .preview-card:hover .preview-cta svg{transform:translateX(4px)}
+
+    /* リーダー */
+    .reader-overlay{position:fixed;inset:0;z-index:1000;background:#faf8f5;display:none;flex-direction:column;opacity:0;transition:opacity .4s}
+    .reader-overlay.open{display:flex;opacity:1}
+    .reader-header{display:flex;align-items:center;justify-content:space-between;padding:.8rem 1.5rem;border-bottom:1px solid #e0dbd4;flex-shrink:0}
+    .reader-chapter-title{font-family:'Shippori Mincho B1',serif;font-size:.8rem;color:#8a8279;letter-spacing:.12em}
+    .reader-close{background:transparent;border:1px solid #d8d3cb;color:#8a8279;width:34px;height:34px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.9rem;transition:all .3s}
+    .reader-close:hover{border-color:#2a2520;color:#2a2520}
+    .reader-body{flex:1;overflow-x:auto;overflow-y:hidden;display:flex;align-items:flex-start;padding:3rem 2.5rem;scrollbar-width:thin;scrollbar-color:#d8d3cb transparent}
+    .reader-content{writing-mode:vertical-rl;min-height:100%;height:100%;transition:opacity .3s}
+    .reader-content.turning{opacity:0}
+    .reader-content p{font-family:'Shippori Mincho B1',serif;font-weight:400;font-size:1.05rem;line-height:1.95;color:#2a2520;text-indent:1em;margin-left:.5em}
+    .reader-content em{font-style:normal;text-emphasis:filled sesame;-webkit-text-emphasis:filled sesame;text-emphasis-color:#944b5a;-webkit-text-emphasis-color:#944b5a}
+    .reader-footer{display:flex;align-items:center;justify-content:center;padding:.7rem;border-top:1px solid #e0dbd4;flex-shrink:0;gap:2rem}
+    .reader-page-btn{background:transparent;border:1px solid #d8d3cb;color:#8a8279;width:38px;height:38px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all .3s}
+    .reader-page-btn:hover:not(:disabled){border-color:#2a2520;color:#2a2520}
+    .reader-page-btn:disabled{opacity:.15;cursor:default}
+    .reader-indicator{font-size:.7rem;color:#b0a89e;letter-spacing:.15em;font-family:'Shippori Mincho B1',serif;min-width:60px;text-align:center}
+    .footer{text-align:center;padding:4rem 1rem;color:#b0a89e;font-size:.7rem;letter-spacing:.2em;font-family:'Shippori Mincho B1',serif;background:#faf8f5}
+
+    @media(max-width:768px){
+      .nav{gap:1rem;font-size:.7rem;flex-wrap:wrap}
+      .player-card{flex-direction:column;align-items:center}
+      .jacket-art{width:200px;height:200px}
+      .player-info{width:100%}
+      .story-section{padding:6rem 1.2rem 4rem}
+      .preview-text{height:160px}
+      .reader-body{padding:2rem 1.2rem}
+      .reader-content p{font-size:.95rem}
+      .cover-frame{top:16px;left:14px;bottom:16px;right:40px}
+    }
+    @media(prefers-reduced-motion:reduce){
+      .story-section{opacity:1;transform:none;transition:none}
+      .book-scroll-hint{animation:none;opacity:.5}
+      .reader-content,.reader-overlay{transition:none}
+    }
+  </style>
+</head>
+<body>
+
+
+<div class="book-scene" id="book-scene">
+  <div class="book-stage">
+    <div class="book-3d" id="book-3d">
+      <div class="book-shadow" id="book-shadow"></div>
+      <div class="book-spine"></div>
+
+      <!-- ページブロック（正面から見える紙の重なり） -->
+      <div class="page-block"></div>
+
+      <!-- ページ側面 -->
+      <div class="pages-edge-left"></div>
+      <div class="pages-edge-bottom"></div>
+      <div class="pages-edge-top"></div>
+
+      <!-- 表紙 -->
+      <div class="cover-group" id="cover-group">
+        <div class="cover-front">
+          <div class="cover-frame"></div>
+          <div class="cover-title-wrap"><div class="cover-book-title">移ろう空模様、花を紡ぐ</div></div>
+        </div>
+        <div class="cover-inner"></div>
+        <div class="cover-edge-left"></div>
+        <div class="cover-edge-bottom"></div>
+      </div>
+    </div>
+
+    <!-- 目次（実サイズ変更でズーム、常にシャープ） -->
+    <div class="toc-approach" id="toc-approach">
+      <div class="toc-label">目　次</div>
+      <h2 class="toc-title">移ろう空模様、花を紡ぐ</h2>
+      <ul class="toc-list">
+        <li><a href="#higanbana">彼岸花 <span class="toc-season">秋</span></a></li>
+        <li><a href="#fuyu">冬の章 <span class="toc-season">冬</span></a></li>
+        <li><a href="#haru">春の章 <span class="toc-season">春</span></a></li>
+        <li><a href="#natsu">夏の章 <span class="toc-season">夏</span></a></li>
+        <li><a href="#jugoya">十五夜草 <span class="toc-season">秋</span></a></li>
+      </ul>
+    </div>
+
+    <div class="book-scroll-hint" id="scroll-hint">tap to open</div>
+  </div>
+</div>
+
+<!-- 各章 -->
+<section class="story-section" id="higanbana"><div class="story-inner"><div class="season-label">第一章 ── 秋</div><h2 class="story-title">彼岸花</h2><div class="player-card"><div class="jacket-art"><div class="jacket-placeholder">ジャケ写を<br>ここに配置</div></div><div class="player-info"><div class="track-title">彼岸花</div><div class="track-artist">悠希</div><div class="audio-controls"><button class="play-btn" aria-label="再生"><svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg></button><div class="progress-bar"><div class="progress-fill"></div></div><span class="time-display">0:00 / 0:00</span></div><audio preload="metadata" src="higanbana.mp3"></audio></div></div><div class="preview-card" data-story="story-higanbana" data-title="彼岸花"><div class="preview-text"><p>秋風が枯れた田畑を撫でるころ、彼岸花は決まって土手に咲いた。毒々しいほどに赤いその花を、祖母は「あちら側の花」と呼んでいた。</p><p>あの日も花は咲いていた。──いや、あの日だけは、少しだけ色が違った気がする。</p></div><div class="preview-cta">続きを読む <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></div></div></div></section>
+<template id="story-higanbana"><div class="page"><p>秋風が枯れた田畑を撫でるころ、彼岸花は決まって土手に咲いた。毒々しいほどに赤いその花を、祖母は「あちら側の花」と呼んでいた。</p><p>あの日も花は咲いていた。──いや、あの日だけは、少しだけ色が違った気がする。橙にも似た、夕暮れのような赤。それを見た瞬間、足が止まった。</p><p>風が止んだ。虫の声すら遠のいた。世界が息を潜めたような静寂のなかで、<em>花だけが揺れていた</em>。</p></div><div class="page"><p>二ページ目。</p></div><div class="page"><p>三ページ目。<em>圏点</em>は em タグ。</p></div></template>
+
+<section class="story-section" id="fuyu"><div class="story-inner"><div class="season-label">第二章 ── 冬</div><h2 class="story-title">冬の章</h2><div class="player-card"><div class="jacket-art"><div class="jacket-placeholder">ジャケ写を<br>ここに配置</div></div><div class="player-info"><div class="track-title">冬の章</div><div class="track-artist">悠希</div><div class="audio-controls"><button class="play-btn" aria-label="再生"><svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg></button><div class="progress-bar"><div class="progress-fill"></div></div><span class="time-display">0:00 / 0:00</span></div><audio preload="metadata" src="fuyu.mp3"></audio></div></div><div class="preview-card" data-story="story-fuyu" data-title="冬の章"><div class="preview-text"><p>冬の章の冒頭をここに書く。</p></div><div class="preview-cta">続きを読む <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></div></div></div></section>
+<template id="story-fuyu"><div class="page"><p>冬の章の全文をここに書く。</p></div></template>
+
+<section class="story-section" id="haru"><div class="story-inner"><div class="season-label">第三章 ── 春</div><h2 class="story-title">春の章</h2><div class="player-card"><div class="jacket-art"><div class="jacket-placeholder">ジャケ写を<br>ここに配置</div></div><div class="player-info"><div class="track-title">春の章</div><div class="track-artist">悠希</div><div class="audio-controls"><button class="play-btn" aria-label="再生"><svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg></button><div class="progress-bar"><div class="progress-fill"></div></div><span class="time-display">0:00 / 0:00</span></div><audio preload="metadata" src="haru.mp3"></audio></div></div><div class="preview-card" data-story="story-haru" data-title="春の章"><div class="preview-text"><p>春の章の冒頭をここに書く。</p></div><div class="preview-cta">続きを読む <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></div></div></div></section>
+<template id="story-haru"><div class="page"><p>春の章の全文をここに書く。</p></div></template>
+
+<section class="story-section" id="natsu"><div class="story-inner"><div class="season-label">第四章 ── 夏</div><h2 class="story-title">夏の章</h2><div class="player-card"><div class="jacket-art"><div class="jacket-placeholder">ジャケ写を<br>ここに配置</div></div><div class="player-info"><div class="track-title">夏の章</div><div class="track-artist">悠希</div><div class="audio-controls"><button class="play-btn" aria-label="再生"><svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg></button><div class="progress-bar"><div class="progress-fill"></div></div><span class="time-display">0:00 / 0:00</span></div><audio preload="metadata" src="natsu.mp3"></audio></div></div><div class="preview-card" data-story="story-natsu" data-title="夏の章"><div class="preview-text"><p>夏の章の冒頭をここに書く。</p></div><div class="preview-cta">続きを読む <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></div></div></div></section>
+<template id="story-natsu"><div class="page"><p>夏の章の全文をここに書く。</p></div></template>
+
+<section class="story-section" id="jugoya"><div class="story-inner"><div class="season-label">第五章 ── 秋</div><h2 class="story-title">十五夜草</h2><div class="player-card"><div class="jacket-art"><div class="jacket-placeholder">ジャケ写を<br>ここに配置</div></div><div class="player-info"><div class="track-title">十五夜草</div><div class="track-artist">悠希</div><div class="audio-controls"><button class="play-btn" aria-label="再生"><svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg></button><div class="progress-bar"><div class="progress-fill"></div></div><span class="time-display">0:00 / 0:00</span></div><audio preload="metadata" src="jugoya.mp3"></audio></div></div><div class="preview-card" data-story="story-jugoya" data-title="十五夜草"><div class="preview-text"><p>十五夜草の冒頭をここに書く。</p></div><div class="preview-cta">続きを読む <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></div></div></div></section>
+<template id="story-jugoya"><div class="page"><p>十五夜草の全文をここに書く。</p></div></template>
+
+<footer class="footer">© 2026 悠希 — 移ろう空模様、花を紡ぐ</footer>
+
+<div class="reader-overlay" id="reader"><div class="reader-header"><span class="reader-chapter-title" id="reader-title"></span><button class="reader-close" id="reader-close" aria-label="閉じる">✕</button></div><div class="reader-body" id="reader-body"><div class="reader-content" id="reader-content"></div></div><div class="reader-footer"><button class="reader-page-btn" id="reader-next" aria-label="次">›</button><span class="reader-indicator" id="reader-indicator"></span><button class="reader-page-btn" id="reader-prev" aria-label="前">‹</button></div></div>
+
+<script>
+const book3d=document.getElementById('book-3d'),coverGroup=document.getElementById('cover-group'),scrollHint=document.getElementById('scroll-hint'),bookShadow=document.getElementById('book-shadow'),tocEl=document.getElementById('toc-approach'),bookStage=document.querySelector('.book-stage');
+function ease(t){return 1-Math.pow(1-t,3)}
+function easeInOut(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2}
+
+// --- アニメーション本体（progressを受け取って描画） ---
+function renderBook(progress){
+  // Phase 1: 傾き（0–10%）
+  const p1=ease(Math.min(progress/0.10,1));
+  // Phase 2: 表紙が開く（5%–55%）
+  const p2raw=Math.max(0,(progress-0.05)/0.50);
+  const p2=easeInOut(Math.min(p2raw,1));
+  const coverAngle=p2*165;
+  const tiltY=8*p1*(1-p2);
+  const tiltX=2*p1*(1-p2);
+
+  book3d.style.transform='rotateY('+tiltY+'deg) rotateX('+tiltX+'deg)';
+  coverGroup.style.transform='translateZ(22px) rotateY('+coverAngle+'deg)';
+  bookShadow.style.transform='rotateX(90deg) scaleX('+(1+p2*.3)+')';
+  bookShadow.style.opacity=Math.max(0,.4-p2*.6);
+
+
+  // 本のフェードアウト：背景が明るくなるにつれて溶ける（30%–75%）
+  const bookFadeRaw=Math.max(0,(progress-0.30)/0.45);
+  const bookFade=easeInOut(Math.min(bookFadeRaw,1));
+  book3d.style.opacity=1-bookFade;
+
+  // 目次フェードイン：本が消え始めてから（50%–85%）
+  const tocRaw=Math.max(0,(progress-0.50)/0.35);
+  const tocFade=ease(Math.min(tocRaw,1));
+  tocEl.style.opacity=tocFade;
+  tocEl.classList.toggle('active',tocFade>0.01);
+
+  scrollHint.style.opacity=progress>.06?'0':'';
+}
+
+// --- タップ/クリックで発動 ---
+let animPlaying=false;
+let animDone=false;
+
+function playAnimation(){
+  if(animPlaying||animDone)return;
+  animPlaying=true;
+  scrollHint.style.opacity='0';
+
+  const duration=4000;
+  const startTime=performance.now();
+
+  function frame(now){
+    const t=Math.min((now-startTime)/duration,1);
+    renderBook(easeInOut(t));
+
+    if(t<1){
+      requestAnimationFrame(frame);
+    }else{
+      animDone=true;
+      animPlaying=false;
+      document.body.style.overflow='auto';
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+// 本をクリック/タップで開く
+book3d.style.cursor='pointer';
+book3d.addEventListener('click',playAnimation);
+
+// 初期状態
+renderBook(0);
+
+const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')})},{threshold:.15});
+document.querySelectorAll('.story-section').forEach(s=>obs.observe(s));
+
+// リーダー
+const reader=document.getElementById('reader'),rTitle=document.getElementById('reader-title'),rBody=document.getElementById('reader-body'),rContent=document.getElementById('reader-content'),rInd=document.getElementById('reader-indicator'),rPrev=document.getElementById('reader-prev'),rNext=document.getElementById('reader-next'),rCloseB=document.getElementById('reader-close');
+let pages=[],curPage=0;
+function showPage(i){rContent.classList.add('turning');setTimeout(()=>{rContent.innerHTML=pages[i].innerHTML;rBody.scrollLeft=0;rContent.classList.remove('turning')},280);curPage=i;rInd.textContent=(i+1)+' / '+pages.length;rNext.disabled=i>=pages.length-1;rPrev.disabled=i<=0}
+document.querySelectorAll('.preview-card').forEach(card=>{card.addEventListener('click',()=>{const tpl=document.getElementById(card.dataset.story);if(!tpl)return;pages=Array.from(tpl.content.querySelectorAll('.page'));curPage=0;rTitle.textContent=card.dataset.title;rContent.innerHTML=pages[0].innerHTML;rInd.textContent='1 / '+pages.length;rPrev.disabled=true;rNext.disabled=pages.length<=1;reader.style.display='flex';requestAnimationFrame(()=>reader.classList.add('open'));document.body.style.overflow='hidden'})});
+rNext.addEventListener('click',()=>{if(curPage<pages.length-1)showPage(curPage+1)});rPrev.addEventListener('click',()=>{if(curPage>0)showPage(curPage-1)});
+document.addEventListener('keydown',e=>{if(!reader.classList.contains('open'))return;if(e.key==='ArrowLeft'&&curPage<pages.length-1)showPage(curPage+1);if(e.key==='ArrowRight'&&curPage>0)showPage(curPage-1);if(e.key==='Escape')closeReader()});
+function closeReader(){reader.classList.remove('open');setTimeout(()=>{reader.style.display='none';document.body.style.overflow=''},400)}
+rCloseB.addEventListener('click',closeReader);
+
+// オーディオ
+const pI='<svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg>',paI='<svg viewBox="0 0 24 24"><rect x="5" y="3" width="4" height="18"/><rect x="15" y="3" width="4" height="18"/></svg>';
+let cA=null,cB=null;function fmt(s){if(isNaN(s))return'0:00';return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0')}
+document.querySelectorAll('.play-btn').forEach(btn=>{const card=btn.closest('.player-card'),audio=card.querySelector('audio'),fill=card.querySelector('.progress-fill'),td=card.querySelector('.time-display'),bar=card.querySelector('.progress-bar');btn.addEventListener('click',()=>{if(cA&&cA!==audio){cA.pause();cB.innerHTML=pI}if(audio.paused){audio.play().catch(()=>{td.textContent='音源なし'});btn.innerHTML=paI;cA=audio;cB=btn}else{audio.pause();btn.innerHTML=pI}});audio.addEventListener('timeupdate',()=>{fill.style.width=(audio.currentTime/audio.duration*100)+'%';td.textContent=fmt(audio.currentTime)+' / '+fmt(audio.duration)});bar.addEventListener('click',e=>{const r=bar.getBoundingClientRect();if(audio.duration)audio.currentTime=((e.clientX-r.left)/r.width)*audio.duration});audio.addEventListener('ended',()=>{btn.innerHTML=pI;fill.style.width='0%'})});
+</script>
+</body>
+</html>
