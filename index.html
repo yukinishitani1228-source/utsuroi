@@ -588,16 +588,47 @@ let animDone=false;
 // iOSは audio.volume を無視するためWeb Audioで制御していたが、
 // AudioContextのサンプリングレート不一致で音程がずれる不具合が出るため
 // Web Audioは使わない。音量を変えるときは音源を作り直すこと。
+
+// iOSはユーザー操作の直後でないと再生を許可しない。
+// setTimeoutで遅らせて呼ぶと拒否されるため、タップした瞬間に
+// 消音状態で一度再生してすぐ止め、要素を解錠しておく。
+function primeAudio(el){
+  if(!el)return;
+  el.muted=true;
+  const done=()=>{el.pause();el.currentTime=0;el.muted=false;};
+  const p=el.play();
+  if(p&&p.then){p.then(done).catch(()=>{el.muted=false;});}
+  else{done();}
+}
+
+// それでも拒否された場合は、次に画面へ触れたときに鳴らす
+function playSafely(el){
+  if(!el)return;
+  el.muted=false;
+  const p=el.play();
+  if(p&&p.catch){
+    p.catch(()=>{
+      const retry=()=>{el.play().catch(()=>{})};
+      document.addEventListener('touchend',retry,{once:true});
+      document.addEventListener('click',retry,{once:true});
+    });
+  }
+}
+
 function playAnimation(){
   if(animPlaying||animDone)return;
   animPlaying=true;
   scrollHint.classList.add('is-hidden');
 
   const sfxFlip=document.getElementById('sfx-flip');
-  if(sfxFlip){setTimeout(()=>{sfxFlip.play().catch(()=>{});},1500);}
-
   const bgm=document.getElementById('bgm');
-  if(bgm){setTimeout(()=>{bgm.play().catch(()=>{});},3000);}
+
+  // タップと同じ実行の流れの中で解錠しておくことが重要
+  primeAudio(sfxFlip);
+  primeAudio(bgm);
+
+  if(sfxFlip){setTimeout(()=>{playSafely(sfxFlip)},1500);}
+  if(bgm){setTimeout(()=>{playSafely(bgm)},3000);}
 
   const duration=5000;
   const startTime=performance.now();
