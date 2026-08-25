@@ -15,7 +15,10 @@
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
     /* 3D変換で画面外にはみ出した要素が横スクロール領域を作ると、
        スマホでページ全体が縮小表示されてしまうため横方向は常に閉じる */
-    html{scroll-behavior:smooth;overflow-x:hidden}
+    /* overflow-xだけを指定すると overflow-y が auto に変わり
+       html要素がスクロールしてしまうため、縦も明示的に閉じる。
+       本を開いたあとにJS側で縦だけ解放する。 */
+    html{scroll-behavior:smooth;overflow-x:hidden;overflow-y:hidden}
     body{background:var(--bg-void);color:var(--text-main);font-family:'Zen Kaku Gothic New',sans-serif;font-weight:300;line-height:1.9;letter-spacing:.03em;overflow:hidden}
 
 /* ===================================================
@@ -653,7 +656,9 @@ function playAnimation(){
     }else{
       animDone=true;
       animPlaying=false;
-      // overflow指定だと横方向まで auto に戻ってしまうので縦だけ解放する
+      // overflow指定だと横方向まで auto に戻ってしまうので縦だけ解放する。
+      // htmlとbodyの両方を開けないとスクロールできない。
+      document.documentElement.style.overflowY='auto';
       document.body.style.overflowY='auto';
       // 拡大・回転したまま残るとドキュメント幅を広げてしまうので消す
       titleOverlay.style.display='none';
