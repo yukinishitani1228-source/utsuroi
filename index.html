@@ -285,6 +285,37 @@
     .story-section.visible{opacity:1;transform:translateY(0)}
     .story-section::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:1px;height:80px;background:linear-gradient(to bottom,transparent,#e0dbd4)}
     .story-inner{max-width:720px;width:100%}
+
+    /* ── 章の扉 ── 章が変わる位置に挟む大きな見出し */
+    .chapter-divider{
+      min-height:62vh;min-height:62dvh;
+      display:flex;flex-direction:column;
+      align-items:center;justify-content:center;
+      padding:6rem 1.5rem;
+      background:#f7f3ea;
+      opacity:0;transform:translateY(30px);
+      transition:opacity .8s ease,transform .8s ease;
+    }
+    .chapter-divider.visible{opacity:1;transform:translateY(0)}
+    .chapter-num{
+      font-family:'Shippori Mincho B1',serif;font-weight:600;
+      font-size:clamp(2rem,7vw,3.2rem);
+      color:#2a2520;
+      /* letter-spacingは末尾にも入るのでtext-indentで中央に戻す */
+      letter-spacing:.3em;text-indent:.3em;
+    }
+    .chapter-season{
+      margin-top:1.4rem;
+      font-family:'Shippori Mincho B1',serif;
+      font-size:clamp(.9rem,2.5vw,1.1rem);
+      color:var(--accent);
+      letter-spacing:.5em;text-indent:.5em;
+    }
+    .chapter-rule{
+      width:1px;height:64px;margin-top:2.2rem;
+      background:linear-gradient(to bottom,var(--accent),transparent);
+      opacity:.45;
+    }
     .season-label{font-family:'Shippori Mincho B1',serif;font-size:.7rem;color:#b0a89e;letter-spacing:.4em;margin-bottom:1rem}
     .story-title{font-family:'Shippori Mincho B1',serif;font-weight:600;font-size:clamp(1.4rem,3.5vw,2rem);color:#2a2520;letter-spacing:.12em;margin-bottom:2.5rem}
     .player-card{display:flex;gap:1.5rem;align-items:flex-start;background:#f0ebe4;border:1px solid #e0dbd4;border-radius:6px;padding:1.5rem;margin-bottom:2rem}
@@ -340,7 +371,7 @@
       .cover-frame{top:16px;left:14px;bottom:16px;right:40px}
     }
     @media(prefers-reduced-motion:reduce){
-      .story-section{opacity:1;transform:none;transition:none}
+      .story-section,.chapter-divider{opacity:1;transform:none;transition:none}
       .book-scroll-hint{animation:none;opacity:.5}
       .reader-content,.reader-overlay{transition:none}
     }
@@ -483,8 +514,22 @@
 </div>
 
 <!-- 各章 -->
+<!-- 章の扉 -->
+<section class="chapter-divider" id="chapter-1">
+  <div class="chapter-num">第一章</div>
+  <div class="chapter-season">秋</div>
+  <div class="chapter-rule"></div>
+</section>
+
 <section class="story-section" id="higanbana"><div class="story-inner"><div class="season-label">第一章 ── 秋</div><h2 class="story-title">彼岸花</h2><div class="player-card"><div class="jacket-art"><div class="jacket-placeholder">ジャケ写を<br>ここに配置</div></div><div class="player-info"><div class="track-title">彼岸花</div><div class="track-artist">悠希</div><div class="audio-controls"><button class="play-btn" aria-label="再生"><svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg></button><div class="progress-bar"><div class="progress-fill"></div></div><span class="time-display">0:00 / 0:00</span></div><audio preload="metadata" src="higanbana.mp3"></audio></div></div><div class="preview-card" data-story="story-higanbana" data-title="彼岸花"><div class="preview-text"><p>秋風が枯れた田畑を撫でるころ、彼岸花は決まって土手に咲いた。毒々しいほどに赤いその花を、祖母は「あちら側の花」と呼んでいた。</p><p>あの日も花は咲いていた。──いや、あの日だけは、少しだけ色が違った気がする。</p></div><div class="preview-cta">続きを読む <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></div></div></div></section>
 <template id="story-higanbana"><div class="page"><p>秋風が枯れた田畑を撫でるころ、彼岸花は決まって土手に咲いた。毒々しいほどに赤いその花を、祖母は「あちら側の花」と呼んでいた。</p><p>あの日も花は咲いていた。──いや、あの日だけは、少しだけ色が違った気がする。橙にも似た、夕暮れのような赤。それを見た瞬間、足が止まった。</p><p>風が止んだ。虫の声すら遠のいた。世界が息を潜めたような静寂のなかで、<em>花だけが揺れていた</em>。</p></div><div class="page"><p>二ページ目。</p></div><div class="page"><p>三ページ目。<em>圏点</em>は em タグ。</p></div></template>
+
+<!-- 章の扉 -->
+<section class="chapter-divider" id="chapter-2">
+  <div class="chapter-num">第二章</div>
+  <div class="chapter-season">冬</div>
+  <div class="chapter-rule"></div>
+</section>
 
 <section class="story-section" id="sazanka"><div class="story-inner"><div class="season-label">第二章 ── 冬</div><h2 class="story-title">山茶花</h2><div class="player-card"><div class="jacket-art"><div class="jacket-placeholder">ジャケ写を<br>ここに配置</div></div><div class="player-info"><div class="track-title">山茶花</div><div class="track-artist">悠希</div><div class="audio-controls"><button class="play-btn" aria-label="再生"><svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg></button><div class="progress-bar"><div class="progress-fill"></div></div><span class="time-display">0:00 / 0:00</span></div><audio preload="metadata" src="sazanka.mp3"></audio></div></div><div class="preview-card" data-story="story-sazanka" data-title="山茶花"><div class="preview-text"><p>山茶花の冒頭をここに書く。</p></div><div class="preview-cta">続きを読む <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></div></div></div></section>
 <template id="story-sazanka"><div class="page"><p>山茶花の全文をここに書く。</p></div></template>
@@ -492,12 +537,26 @@
 <template id="story-kanshirogiku"><div class="page"><p>寒白菊の全文をここに書く。</p></div></template>
 <section class="story-section" id="matsuyukiso"><div class="story-inner"><div class="season-label">第二章 ── 冬</div><h2 class="story-title">待雪草</h2><div class="player-card"><div class="jacket-art"><div class="jacket-placeholder">ジャケ写を<br>ここに配置</div></div><div class="player-info"><div class="track-title">待雪草</div><div class="track-artist">悠希</div><div class="audio-controls"><button class="play-btn" aria-label="再生"><svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg></button><div class="progress-bar"><div class="progress-fill"></div></div><span class="time-display">0:00 / 0:00</span></div><audio preload="metadata" src="matsuyukiso.mp3"></audio></div></div><div class="preview-card" data-story="story-matsuyukiso" data-title="待雪草"><div class="preview-text"><p>待雪草の冒頭をここに書く。</p></div><div class="preview-cta">続きを読む <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></div></div></div></section>
 <template id="story-matsuyukiso"><div class="page"><p>待雪草の全文をここに書く。</p></div></template>
+<!-- 章の扉 -->
+<section class="chapter-divider" id="chapter-3">
+  <div class="chapter-num">第三章</div>
+  <div class="chapter-season">春</div>
+  <div class="chapter-rule"></div>
+</section>
+
 <section class="story-section" id="tanpopo"><div class="story-inner"><div class="season-label">第三章 ── 春</div><h2 class="story-title">蒲公英</h2><div class="player-card"><div class="jacket-art"><div class="jacket-placeholder">ジャケ写を<br>ここに配置</div></div><div class="player-info"><div class="track-title">蒲公英</div><div class="track-artist">悠希</div><div class="audio-controls"><button class="play-btn" aria-label="再生"><svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg></button><div class="progress-bar"><div class="progress-fill"></div></div><span class="time-display">0:00 / 0:00</span></div><audio preload="metadata" src="tanpopo.mp3"></audio></div></div><div class="preview-card" data-story="story-tanpopo" data-title="蒲公英"><div class="preview-text"><p>蒲公英の冒頭をここに書く。</p></div><div class="preview-cta">続きを読む <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></div></div></div></section>
 <template id="story-tanpopo"><div class="page"><p>蒲公英の全文をここに書く。</p></div></template>
 <section class="story-section" id="yusuraume"><div class="story-inner"><div class="season-label">第三章 ── 春</div><h2 class="story-title">山桜桃梅</h2><div class="player-card"><div class="jacket-art"><div class="jacket-placeholder">ジャケ写を<br>ここに配置</div></div><div class="player-info"><div class="track-title">山桜桃梅</div><div class="track-artist">悠希</div><div class="audio-controls"><button class="play-btn" aria-label="再生"><svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg></button><div class="progress-bar"><div class="progress-fill"></div></div><span class="time-display">0:00 / 0:00</span></div><audio preload="metadata" src="yusuraume.mp3"></audio></div></div><div class="preview-card" data-story="story-yusuraume" data-title="山桜桃梅"><div class="preview-text"><p>山桜桃梅の冒頭をここに書く。</p></div><div class="preview-cta">続きを読む <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></div></div></div></section>
 <template id="story-yusuraume"><div class="page"><p>山桜桃梅の全文をここに書く。</p></div></template>
 <section class="story-section" id="hinageshi"><div class="story-inner"><div class="season-label">第三章 ── 春</div><h2 class="story-title">雛罌粟</h2><div class="player-card"><div class="jacket-art"><div class="jacket-placeholder">ジャケ写を<br>ここに配置</div></div><div class="player-info"><div class="track-title">雛罌粟</div><div class="track-artist">悠希</div><div class="audio-controls"><button class="play-btn" aria-label="再生"><svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg></button><div class="progress-bar"><div class="progress-fill"></div></div><span class="time-display">0:00 / 0:00</span></div><audio preload="metadata" src="hinageshi.mp3"></audio></div></div><div class="preview-card" data-story="story-hinageshi" data-title="雛罌粟"><div class="preview-text"><p>雛罌粟の冒頭をここに書く。</p></div><div class="preview-cta">続きを読む <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></div></div></div></section>
 <template id="story-hinageshi"><div class="page"><p>雛罌粟の全文をここに書く。</p></div></template>
+<!-- 章の扉 -->
+<section class="chapter-divider" id="chapter-4">
+  <div class="chapter-num">第四章</div>
+  <div class="chapter-season">夏</div>
+  <div class="chapter-rule"></div>
+</section>
+
 <section class="story-section" id="ajisai"><div class="story-inner"><div class="season-label">第四章 ── 夏</div><h2 class="story-title">紫陽花</h2><div class="player-card"><div class="jacket-art"><div class="jacket-placeholder">ジャケ写を<br>ここに配置</div></div><div class="player-info"><div class="track-title">紫陽花</div><div class="track-artist">悠希</div><div class="audio-controls"><button class="play-btn" aria-label="再生"><svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg></button><div class="progress-bar"><div class="progress-fill"></div></div><span class="time-display">0:00 / 0:00</span></div><audio preload="metadata" src="ajisai.mp3"></audio></div></div><div class="preview-card" data-story="story-ajisai" data-title="紫陽花"><div class="preview-text"><p>紫陽花の冒頭をここに書く。</p></div><div class="preview-cta">続きを読む <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></div></div></div></section>
 <template id="story-ajisai"><div class="page"><p>紫陽花の全文をここに書く。</p></div></template>
 <section class="story-section" id="gekkabijin"><div class="story-inner"><div class="season-label">第四章 ── 夏</div><h2 class="story-title">月下美人</h2><div class="player-card"><div class="jacket-art"><div class="jacket-placeholder">ジャケ写を<br>ここに配置</div></div><div class="player-info"><div class="track-title">月下美人</div><div class="track-artist">悠希</div><div class="audio-controls"><button class="play-btn" aria-label="再生"><svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg></button><div class="progress-bar"><div class="progress-fill"></div></div><span class="time-display">0:00 / 0:00</span></div><audio preload="metadata" src="gekkabijin.mp3"></audio></div></div><div class="preview-card" data-story="story-gekkabijin" data-title="月下美人"><div class="preview-text"><p>月下美人の冒頭をここに書く。</p></div><div class="preview-cta">続きを読む <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></div></div></div></section>
@@ -508,6 +567,13 @@
 <section class="story-section" id="__ID__"><div class="story-inner"><div class="season-label">第四章 ── 夏</div><h2 class="story-title">__NAME__</h2><div class="player-card"><div class="jacket-art"><div class="jacket-placeholder">ジャケ写を<br>ここに配置</div></div><div class="player-info"><div class="track-title">__NAME__</div><div class="track-artist">悠希</div><div class="audio-controls"><button class="play-btn" aria-label="再生"><svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg></button><div class="progress-bar"><div class="progress-fill"></div></div><span class="time-display">0:00 / 0:00</span></div><audio preload="metadata" src="__ID__.mp3"></audio></div></div><div class="preview-card" data-story="story-__ID__" data-title="__NAME__"><div class="preview-text"><p>__NAME__の冒頭をここに書く。</p></div><div class="preview-cta">続きを読む <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></div></div></div></section>
 <template id="story-__ID__"><div class="page"><p>__NAME__の全文をここに書く。</p></div></template>
 -->
+
+<!-- 章の扉 -->
+<section class="chapter-divider" id="chapter-5">
+  <div class="chapter-num">第五章</div>
+  <div class="chapter-season">秋</div>
+  <div class="chapter-rule"></div>
+</section>
 
 <section class="story-section" id="jugoya"><div class="story-inner"><div class="season-label">第五章 ── 秋</div><h2 class="story-title">十五夜草</h2><div class="player-card"><div class="jacket-art"><div class="jacket-placeholder">ジャケ写を<br>ここに配置</div></div><div class="player-info"><div class="track-title">十五夜草</div><div class="track-artist">悠希</div><div class="audio-controls"><button class="play-btn" aria-label="再生"><svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg></button><div class="progress-bar"><div class="progress-fill"></div></div><span class="time-display">0:00 / 0:00</span></div><audio preload="metadata" src="jugoya.mp3"></audio></div></div><div class="preview-card" data-story="story-jugoya" data-title="十五夜草"><div class="preview-text"><p>十五夜草の冒頭をここに書く。</p></div><div class="preview-cta">続きを読む <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></div></div></div></section>
 <template id="story-jugoya"><div class="page"><p>十五夜草の全文をここに書く。</p></div></template>
@@ -736,7 +802,7 @@ chapterBtns.forEach(btn=>{
 });
 
 const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')})},{threshold:.15});
-document.querySelectorAll('.story-section').forEach(s=>obs.observe(s));
+document.querySelectorAll('.story-section,.chapter-divider').forEach(s=>obs.observe(s));
 
 // リーダー
 const reader=document.getElementById('reader'),rTitle=document.getElementById('reader-title'),rBody=document.getElementById('reader-body'),rContent=document.getElementById('reader-content'),rInd=document.getElementById('reader-indicator'),rPrev=document.getElementById('reader-prev'),rNext=document.getElementById('reader-next'),rCloseB=document.getElementById('reader-close');
