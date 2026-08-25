@@ -13,13 +13,16 @@
       --text-main:#d4cdc4;--text-sub:#7a7588;--text-dim:#3a3648;--border:#1e1e30;
     }
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-    html{scroll-behavior:smooth}
+    /* 3D変換で画面外にはみ出した要素が横スクロール領域を作ると、
+       スマホでページ全体が縮小表示されてしまうため横方向は常に閉じる */
+    html{scroll-behavior:smooth;overflow-x:hidden}
     body{background:var(--bg-void);color:var(--text-main);font-family:'Zen Kaku Gothic New',sans-serif;font-weight:300;line-height:1.9;letter-spacing:.03em;overflow:hidden}
 
 /* ===================================================
        【3Dブック ── 正面から「本」に見えるデザイン】
     =================================================== */
-    .book-scene{height:100vh;height:100dvh;position:relative}
+    /* 3D空間の外に置いたタイトルもここで確実に収める */
+    .book-scene{height:100vh;height:100dvh;position:relative;overflow:hidden}
 
     .book-stage{
       position:relative;height:100vh;height:100dvh;
@@ -608,7 +611,12 @@ function playAnimation(){
     }else{
       animDone=true;
       animPlaying=false;
-      document.body.style.overflow='auto';
+      // overflow指定だと横方向まで auto に戻ってしまうので縦だけ解放する
+      document.body.style.overflowY='auto';
+      // 拡大・回転したまま残るとドキュメント幅を広げてしまうので消す
+      titleOverlay.style.display='none';
+      titleOverlay.style.transform='';
+      titlePlane.style.transform='';
     }
   }
   requestAnimationFrame(frame);
