@@ -793,14 +793,23 @@ rBody.addEventListener('pointerup',e=>{
   }
 });
 document.addEventListener('keydown',e=>{if(!reader.classList.contains('open'))return;if(e.key==='ArrowLeft'&&curPage<pages.length-1)showPage(curPage+1);if(e.key==='ArrowRight'&&curPage>0)showPage(curPage-1);if(e.key==='Escape')closeReader()});
-function closeReader(){reader.classList.remove('open');setTimeout(()=>{reader.style.display='none';document.body.style.overflow=''},400)}
+function closeReader(){reader.classList.remove('open');resumeBgm();setTimeout(()=>{reader.style.display='none';document.body.style.overflow=''},400)}
 rCloseB.addEventListener('click',closeReader);
 
 // オーディオ
 const pI='<svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg>',paI='<svg viewBox="0 0 24 24"><rect x="5" y="3" width="4" height="18"/><rect x="15" y="3" width="4" height="18"/></svg>';
 let cA=null,cB=null;function fmt(s){if(isNaN(s))return'0:00';return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0')}
 // 曲を聴くときや本文を読むときは目次のBGMを止める
-function stopBgm(){const b=document.getElementById('bgm');if(b&&!b.paused)b.pause()}
+let bgmPausedByUs=false;
+function stopBgm(){const b=document.getElementById('bgm');if(b&&!b.paused){b.pause();bgmPausedByUs=true}}
+// 本文を閉じたら戻す。ただし曲が鳴っているときは重ねない
+function resumeBgm(){
+  const b=document.getElementById('bgm');
+  if(!b||!bgmPausedByUs)return;
+  if(cA&&!cA.paused)return;
+  bgmPausedByUs=false;
+  b.play().catch(()=>{});
+}
 document.querySelectorAll('.play-btn').forEach(btn=>{const card=btn.closest('.player-card'),audio=card.querySelector('audio'),fill=card.querySelector('.progress-fill'),td=card.querySelector('.time-display'),bar=card.querySelector('.progress-bar');btn.addEventListener('click',()=>{if(cA&&cA!==audio){cA.pause();cB.innerHTML=pI}if(audio.paused){stopBgm();audio.play().catch(()=>{td.textContent='音源なし'});btn.innerHTML=paI;cA=audio;cB=btn}else{audio.pause();btn.innerHTML=pI}});audio.addEventListener('timeupdate',()=>{fill.style.width=(audio.currentTime/audio.duration*100)+'%';td.textContent=fmt(audio.currentTime)+' / '+fmt(audio.duration)});bar.addEventListener('click',e=>{const r=bar.getBoundingClientRect();if(audio.duration)audio.currentTime=((e.clientX-r.left)/r.width)*audio.duration});audio.addEventListener('ended',()=>{btn.innerHTML=pI;fill.style.width='0%'})});
 </script>
 
