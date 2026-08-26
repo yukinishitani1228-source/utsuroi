@@ -799,18 +799,65 @@ rCloseB.addEventListener('click',closeReader);
 // オーディオ
 const pI='<svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg>',paI='<svg viewBox="0 0 24 24"><rect x="5" y="3" width="4" height="18"/><rect x="15" y="3" width="4" height="18"/></svg>';
 let cA=null,cB=null;function fmt(s){if(isNaN(s))return'0:00';return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0')}
-// 曲を聴くときや本文を読むときは目次のBGMを止める
-let bgmPausedByUs=false;
-function stopBgm(){const b=document.getElementById('bgm');if(b&&!b.paused){b.pause();bgmPausedByUs=true}}
-// 本文を閉じたら戻す。ただし曲が鳴っているときは重ねない
+// ── 目次BGMの制御 ──
+// 曲を聴くときや本文を読むときは止め、終わったら戻す。
+// 切り替えはフェードで行う。
+const FADE_OUT_MS=700,FADE_IN_MS=1000;
+let bgmPausedByUs=false,fadeTimer=null,canFade=null;
+
+// iOSは audio.volume の変更を無視するため、フェードできるか調べる
+function volumeControllable(el){
+  if(canFade!==null)return canFade;
+  const prev=el.volume;
+  el.volume=0.5;
+  canFade=Math.abs(el.volume-0.5)<0.01;
+  el.volume=prev;
+  return canFade;
+}
+function fadeTo(el,target,ms,done){
+  clearInterval(fadeTimer);
+  if(!volumeControllable(el)){if(done)done();return}
+  const start=el.volume,steps=Math.max(1,Math.round(ms/40));
+  let n=0;
+  fadeTimer=setInterval(()=>{
+    n++;
+    el.volume=Math.min(1,Math.max(0,start+(target-start)*(n/steps)));
+    if(n>=steps){clearInterval(fadeTimer);if(done)done()}
+  },40);
+}
+
+// フェードアウトしきってから done を呼ぶので、曲と重ならない
+function stopBgm(done){
+  const b=document.getElementById('bgm');
+  if(!b||b.paused){if(done)done();return}
+  bgmPausedByUs=true;
+  fadeTo(b,0,FADE_OUT_MS,()=>{b.pause();if(done)done()});
+}
 function resumeBgm(){
   const b=document.getElementById('bgm');
   if(!b||!bgmPausedByUs)return;
-  if(cA&&!cA.paused)return;
+  if(cA&&!cA.paused)return; // 曲が鳴っているときは重ねない
   bgmPausedByUs=false;
-  b.play().catch(()=>{});
+  clearInterval(fadeTimer);
+  if(volumeControllable(b))b.volume=0;
+  b.play().then(()=>fadeTo(b,1,FADE_IN_MS)).catch(()=>{});
 }
-document.querySelectorAll('.play-btn').forEach(btn=>{const card=btn.closest('.player-card'),audio=card.querySelector('audio'),fill=card.querySelector('.progress-fill'),td=card.querySelector('.time-display'),bar=card.querySelector('.progress-bar');btn.addEventListener('click',()=>{if(cA&&cA!==audio){cA.pause();cB.innerHTML=pI}if(audio.paused){stopBgm();audio.play().catch(()=>{td.textContent='音源なし'});btn.innerHTML=paI;cA=audio;cB=btn}else{audio.pause();btn.innerHTML=pI}});audio.addEventListener('timeupdate',()=>{fill.style.width=(audio.currentTime/audio.duration*100)+'%';td.textContent=fmt(audio.currentTime)+' / '+fmt(audio.duration)});bar.addEventListener('click',e=>{const r=bar.getBoundingClientRect();if(audio.duration)audio.currentTime=((e.clientX-r.left)/r.width)*audio.duration});audio.addEventListener('ended',()=>{btn.innerHTML=pI;fill.style.width='0%'})});
+document.querySelectorAll('.play-btn').forEach(btn=>{const card=btn.closest('.player-card'),audio=card.querySelector('audio'),fill=card.querySelector('.progress-fill'),td=card.querySelector('.time-display'),bar=card.querySelector('.progress-bar');btn.addEventListener('click',()=>{
+  if(cA&&cA!==audio){cA.pause();cB.innerHTML=pI}
+  if(audio.paused){
+    btn.innerHTML=paI;cA=audio;cB=btn;
+    // iOSは操作の直後でないと再生を許可しないため、まず消音のまま鳴らし始め、
+    // BGMが消えきってから頭出しして聞こえるようにする
+    audio.muted=true;
+    audio.play().then(()=>{
+      stopBgm(()=>{if(cA===audio){audio.currentTime=0;audio.muted=false}});
+    }).catch(()=>{td.textContent='音源なし';audio.muted=false;btn.innerHTML=pI});
+  }else{
+    audio.pause();btn.innerHTML=pI;
+  }
+});
+// 曲を止めた・聴き終えたらBGMを戻す
+audio.addEventListener('pause',()=>{setTimeout(()=>{if(cA===audio&&audio.paused)resumeBgm()},80)});audio.addEventListener('timeupdate',()=>{fill.style.width=(audio.currentTime/audio.duration*100)+'%';td.textContent=fmt(audio.currentTime)+' / '+fmt(audio.duration)});bar.addEventListener('click',e=>{const r=bar.getBoundingClientRect();if(audio.duration)audio.currentTime=((e.clientX-r.left)/r.width)*audio.duration});audio.addEventListener('ended',()=>{btn.innerHTML=pI;fill.style.width='0%';resumeBgm()})});
 </script>
 
 
