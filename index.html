@@ -28,10 +28,10 @@
        【3Dブック ── 正面から「本」に見えるデザイン】
     =================================================== */
     /* 3D空間の外に置いたタイトルもここで確実に収める */
-    .book-scene{height:100vh;height:100dvh;position:relative;overflow:hidden}
+    .book-scene{height:100vh;height:100svh;position:relative;overflow:hidden}
 
     .book-stage{
-      position:relative;height:100vh;height:100dvh;
+      position:relative;height:100vh;height:100svh;
       display:flex;align-items:center;justify-content:center;
       perspective:2200px;
       overflow:hidden;
@@ -44,9 +44,9 @@
     .book-3d{
       position:relative;
       width:min(380px,72vw,calc(68vh * 0.7037));
-      width:min(380px,72vw,calc(68dvh * 0.7037));
+      width:min(380px,72vw,calc(68svh * 0.7037));
       height:min(540px,68vh);
-      height:min(540px,68dvh);
+      height:min(540px,68svh);
       transform-style:preserve-3d;
       transform:rotateY(0deg) rotateX(0deg);
     }
@@ -99,12 +99,12 @@
        目次自身がスクロールを受け取り、ページ本体へ進めなくなるため。 */
     .book-scene.toc-flow{height:auto;overflow:visible}
     .book-scene.toc-flow .book-stage{
-      height:auto;min-height:100vh;min-height:100dvh;
+      height:auto;min-height:100vh;min-height:100svh;
       display:block;overflow:visible;perspective:none;
     }
     .book-scene.toc-flow .toc-approach{
       position:relative;inset:auto;
-      min-height:100vh;min-height:100dvh;
+      min-height:100vh;min-height:100svh;
       overflow:visible;
     }
     /* margin:autoなら、余裕があるときは中央・はみ出すときは上を切らない */
@@ -331,7 +331,7 @@
     /* ===================================================
        【各章セクション】
     =================================================== */
-    .story-section{min-height:100vh;padding:8rem 1.5rem 6rem;display:flex;justify-content:center;position:relative;opacity:0;transform:translateY(30px);transition:opacity .8s ease,transform .8s ease;background:#f7f3ea}
+    .story-section{min-height:100vh;min-height:100svh;padding:8rem 1.5rem 6rem;display:flex;justify-content:center;position:relative;opacity:0;transform:translateY(30px);transition:opacity .8s ease,transform .8s ease;background:#f7f3ea}
     .story-section.visible{opacity:1;transform:translateY(0)}
     .story-section::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:1px;height:80px;background:linear-gradient(to bottom,transparent,#e0dbd4)}
     .story-inner{max-width:720px;width:100%}
