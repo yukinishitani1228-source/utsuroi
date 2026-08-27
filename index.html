@@ -162,12 +162,13 @@
     }
     .toc-action:hover{color:#b8683e;border-color:#c8a487}
 
-    /* 通して読むときに挟む扉のページ */
+    /* 通して読むときに挟む扉のページ。
+       本文は左詰めで流れるため、扉だけは読書領域いっぱいに広げて中央に置く。 */
     .story-break{
-      height:100%;
+      position:absolute;
+      inset:0;
       display:flex;flex-direction:column;
       align-items:center;justify-content:center;
-      padding:0 2.5em;
     }
     .story-break-chapter{
       font-family:'Shippori Mincho B1',serif;
@@ -359,7 +360,7 @@
     .reader-chapter-title{font-family:'Shippori Mincho B1',serif;font-size:.8rem;color:#8a8279;letter-spacing:.12em}
     .reader-close{background:transparent;border:1px solid #d8d3cb;color:#8a8279;width:34px;height:34px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.9rem;transition:all .3s}
     .reader-close:hover{border-color:#2a2520;color:#2a2520}
-    .reader-body{flex:1;overflow-x:auto;overflow-y:hidden;display:flex;align-items:flex-start;padding:3rem 2.5rem;scrollbar-width:thin;scrollbar-color:#d8d3cb transparent;cursor:pointer}
+    .reader-body{flex:1;position:relative;overflow-x:auto;overflow-y:hidden;display:flex;align-items:flex-start;padding:3rem 2.5rem;scrollbar-width:thin;scrollbar-color:#d8d3cb transparent;cursor:pointer}
     .reader-content{writing-mode:vertical-rl;min-height:100%;height:100%;transition:opacity .3s}
     .reader-content.turning{opacity:0}
     .reader-content p{font-family:'Shippori Mincho B1',serif;font-weight:400;font-size:1.05rem;line-height:1.95;color:#2a2520;text-indent:1em;margin-left:.5em}
