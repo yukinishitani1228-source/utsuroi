@@ -390,6 +390,12 @@
       .cover-front{padding:1.2rem!important}
       .cover-frame{top:14px!important;left:12px!important;bottom:14px!important;right:36px!important}
       .toc-list{max-width:240px!important}
+      /* 目次が画面に収まらないと、目次自身がスクロールを受け取ってしまい
+         ページ本体へスクロールできなくなるため、縦の余白を詰める */
+      .toc-inner{padding:2rem 1.25rem}
+      .toc-label{margin-bottom:1rem}
+      .toc-title{margin-bottom:1.1rem}
+      .toc-actions{margin-top:1.3rem}
     }
     /* PCでは目次を大きめに */
     @media(min-width:768px){
@@ -871,7 +877,18 @@ rBody.addEventListener('pointerup',e=>{
   }
 });
 document.addEventListener('keydown',e=>{if(!reader.classList.contains('open'))return;if(e.key==='ArrowLeft'&&curPage<pages.length-1)showPage(curPage+1);if(e.key==='ArrowRight'&&curPage>0)showPage(curPage-1);if(e.key==='Escape')closeReader()});
-function closeReader(){reader.classList.remove('open');resumeBgm();setTimeout(()=>{reader.style.display='none';document.body.style.overflow=''},400)}
+function closeReader(){
+  reader.classList.remove('open');
+  resumeBgm();
+  setTimeout(()=>{
+    reader.style.display='none';
+    // overflowを空にするとCSSのhiddenに戻りページがスクロールできなくなる。
+    // 横は閉じたまま縦だけ解放し直す。
+    document.body.style.overflow='';
+    document.body.style.overflowY='auto';
+    document.documentElement.style.overflowY='auto';
+  },400);
+}
 rCloseB.addEventListener('click',closeReader);
 
 // オーディオ
