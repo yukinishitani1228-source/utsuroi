@@ -796,10 +796,24 @@ document.querySelectorAll('.story-section').forEach(s=>obs.observe(s));
 // リーダー
 const reader=document.getElementById('reader'),rTitle=document.getElementById('reader-title'),rBody=document.getElementById('reader-body'),rContent=document.getElementById('reader-content'),rInd=document.getElementById('reader-indicator'),rPrev=document.getElementById('reader-prev'),rNext=document.getElementById('reader-next'),rCloseB=document.getElementById('reader-close');
 // ページは {html, title} の並び。通して読むときは複数の物語がつながる。
-let pages=[],curPage=0;
+let pages=[],curPage=0,swapTimer=null;
+// 縦書きの本文はiOSで内容を差し替えても前のページが描き残ることがあるため、
+// 一度空にして表示を切り、レイアウトをやり直させてから新しい内容を入れる。
+function setPageContent(html){
+  clearTimeout(swapTimer);
+  rContent.innerHTML='';
+  rContent.style.display='none';
+  void rContent.offsetHeight;
+  rContent.innerHTML=html;
+  rContent.style.display='';
+  void rContent.offsetHeight;
+  rBody.scrollLeft=0;
+}
 function showPage(i){
+  if(i<0||i>=pages.length||i===curPage)return;
   rContent.classList.add('turning');
-  setTimeout(()=>{rContent.innerHTML=pages[i].html;rBody.scrollLeft=0;rContent.classList.remove('turning')},280);
+  clearTimeout(swapTimer);
+  swapTimer=setTimeout(()=>{setPageContent(pages[i].html);rContent.classList.remove('turning')},280);
   curPage=i;
   rTitle.textContent=pages[i].title;
   rInd.textContent=(i+1)+' / '+pages.length;
@@ -820,8 +834,8 @@ function openReader(list){
   stopBgm();
   pages=list;curPage=0;
   rTitle.textContent=pages[0].title;
-  rContent.innerHTML=pages[0].html;
-  rBody.scrollLeft=0;
+  rContent.classList.remove('turning');
+  setPageContent(pages[0].html);
   rInd.textContent='1 / '+pages.length;
   rPrev.disabled=true;rNext.disabled=pages.length<=1;
   reader.style.display='flex';
