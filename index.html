@@ -90,6 +90,20 @@
       z-index:60;
     }
     .toc-approach.active{pointer-events:auto}
+
+    /* 本が開ききったあとは目次を通常のページの流れに戻す。
+       入れ子のスクロール領域のままだと、目次が画面より高いときに
+       目次自身がスクロールを受け取り、ページ本体へ進めなくなるため。 */
+    .book-scene.toc-flow{height:auto;overflow:visible}
+    .book-scene.toc-flow .book-stage{
+      height:auto;min-height:100vh;min-height:100dvh;
+      display:block;overflow:visible;perspective:none;
+    }
+    .book-scene.toc-flow .toc-approach{
+      position:relative;inset:auto;
+      min-height:100vh;min-height:100dvh;
+      overflow:visible;
+    }
     /* margin:autoなら、余裕があるときは中央・はみ出すときは上を切らない */
     .toc-inner{
       margin:auto;
@@ -704,6 +718,12 @@ function playAnimation(){
       titleOverlay.style.display='none';
       titleOverlay.style.transform='';
       titlePlane.style.transform='';
+      // 役目を終えた本を取り除き、目次を通常のページの流れに戻す。
+      // これで入れ子のスクロール領域が無くなり、目次からそのまま下へ進める。
+      book3d.style.display='none';
+      bookShadow.style.display='none';
+      bookStage.style.perspective='';
+      document.getElementById('book-scene').classList.add('toc-flow');
     }
   }
   requestAnimationFrame(frame);
