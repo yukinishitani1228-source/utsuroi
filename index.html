@@ -15,11 +15,14 @@
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
     /* 3D変換で画面外にはみ出した要素が横スクロール領域を作ると、
        スマホでページ全体が縮小表示されてしまうため横方向は常に閉じる */
-    /* overflow-xだけを指定すると overflow-y が auto に変わり
-       html要素がスクロールしてしまうため、縦も明示的に閉じる。
-       本を開いたあとにJS側で縦だけ解放する。 */
-    html{scroll-behavior:smooth;overflow-x:hidden;overflow-y:hidden}
-    body{background:var(--bg-void);color:var(--text-main);font-family:'Zen Kaku Gothic New',sans-serif;font-weight:300;line-height:1.9;letter-spacing:.03em;overflow:hidden}
+    /* 縦のスクロールは常に開けておく。
+       overflowを閉じたり開けたりすると、iOSが変化をすぐ認識せず
+       解放直後の最初の指の動きが捨てられてしまうため。
+       表紙の間は本文自体を隠してページを画面1枚分に保ち、
+       スクロールする先が無い状態にする。 */
+    html{scroll-behavior:smooth;overflow-x:hidden}
+    body{background:var(--bg-void);color:var(--text-main);font-family:'Zen Kaku Gothic New',sans-serif;font-weight:300;line-height:1.9;letter-spacing:.03em;overflow-x:hidden}
+    body.locked .story-section{display:none}
 
 /* ===================================================
        【3Dブック ── 正面から「本」に見えるデザイン】
@@ -368,7 +371,9 @@
     .preview-card:hover .preview-cta svg{transform:translateX(4px)}
 
     /* リーダー */
-    .reader-overlay{position:fixed;inset:0;z-index:1000;background:#f7f3ea;display:none;flex-direction:column;opacity:0;transition:opacity .4s}
+    /* overscroll-behaviorで背面へのスクロールを止める。
+       bodyのoverflowを閉じるとiOSで最初の指の動きが捨てられるため使わない。 */
+    .reader-overlay{position:fixed;inset:0;z-index:1000;background:#f7f3ea;display:none;flex-direction:column;opacity:0;transition:opacity .4s;overscroll-behavior:contain}
     .reader-overlay.open{display:flex;opacity:1}
     .reader-header{display:flex;align-items:center;justify-content:space-between;padding:.8rem 1.5rem;border-bottom:1px solid #e0dbd4;flex-shrink:0}
     .reader-chapter-title{font-family:'Shippori Mincho B1',serif;font-size:.8rem;color:#8a8279;letter-spacing:.12em}
@@ -424,7 +429,7 @@
     }
   </style>
 </head>
-<body>
+<body class="locked">
 
 
 <div class="book-scene" id="book-scene">
@@ -652,21 +657,11 @@ function renderBook(progress){
 let animPlaying=false;
 let animDone=false;
 
-// 縦スクロールを解放する。
-// overflow指定だと横方向まで auto に戻ってしまうので縦だけ開ける。
-// またiOSは閉じていた状態からの切り替えをすぐ認識せず、
-// 最初の指の動きが捨てられることがあるため、
-// レイアウトをやり直させたうえで一度だけ位置を動かして認識させる。
+// 本文を表示してページを伸ばす。
+// overflowは触らないので、iOSがスクロールの可否を判定し直す必要がなく、
+// 最初の指の動きから普通にスクロールできる。
 function unlockScroll(){
-  const de=document.documentElement;
-  de.style.overflowY='auto';
-  document.body.style.overflowY='auto';
-  requestAnimationFrame(()=>{
-    void de.offsetHeight;
-    const y=de.scrollTop;
-    de.scrollTop=y+1;
-    de.scrollTop=y;
-  });
+  document.body.classList.remove('locked');
 }
 
 // 音量は音源ファイル自体に焼き込んである（BGM 0.4 / 効果音 0.7）。
@@ -875,7 +870,6 @@ function openReader(list){
   rPrev.disabled=true;rNext.disabled=pages.length<=1;
   reader.style.display='flex';
   requestAnimationFrame(()=>reader.classList.add('open'));
-  document.body.style.overflow='hidden';
 }
 // 一篇だけ読む
 document.querySelectorAll('.preview-card').forEach(card=>{
@@ -931,9 +925,6 @@ function closeReader(){
   resumeBgm();
   setTimeout(()=>{
     reader.style.display='none';
-    // overflowを空にするとCSSのhiddenに戻りページがスクロールできなくなる。
-    // 横は閉じたまま縦だけ解放し直す。
-    document.body.style.overflow='';
     unlockScroll();
   },400);
 }
