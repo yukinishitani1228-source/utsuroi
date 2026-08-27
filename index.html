@@ -150,6 +150,35 @@
     .toc-stories a:hover{color:var(--accent-red)}
     .toc-tbd span{color:#c0b8ae}
 
+    /* 通して聴く／通して読む */
+    .toc-actions{display:flex;gap:.9rem;margin-top:2rem;flex-wrap:wrap;justify-content:center}
+    .toc-action{
+      font-family:'Shippori Mincho B1',serif;
+      font-size:.78rem;letter-spacing:.18em;
+      color:#5a5550;background:transparent;
+      border:1px solid #ddd5c8;border-radius:2px;
+      padding:.62rem 1.3rem;cursor:pointer;
+      transition:color .3s,border-color .3s;
+    }
+    .toc-action:hover{color:#b8683e;border-color:#c8a487}
+
+    /* 通して読むときに挟む扉のページ */
+    .story-break{
+      height:100%;
+      display:flex;flex-direction:column;
+      align-items:center;justify-content:center;
+      padding:0 2.5em;
+    }
+    .story-break-chapter{
+      font-family:'Shippori Mincho B1',serif;
+      font-size:.78rem;color:#b8683e;letter-spacing:.35em;
+      margin-left:1.6em;
+    }
+    .story-break-title{
+      font-family:'Shippori Mincho B1',serif;font-weight:600;
+      font-size:1.6rem;color:#2a2520;letter-spacing:.22em;
+    }
+
     /* ===================================================
        【表紙 ── 正面からでも「本」に見えるデザイン】
        ・左端に背表紙の丸み＋溝（ちょうつがい）を再現
@@ -479,6 +508,11 @@
           </li>
 
         </ul>
+
+        <div class="toc-actions">
+          <button class="toc-action" type="button" id="play-all">通して聴く</button>
+          <button class="toc-action" type="button" id="read-all">通して読む</button>
+        </div>
       </div>
     </div>
 
@@ -755,9 +789,55 @@ document.querySelectorAll('.story-section').forEach(s=>obs.observe(s));
 
 // リーダー
 const reader=document.getElementById('reader'),rTitle=document.getElementById('reader-title'),rBody=document.getElementById('reader-body'),rContent=document.getElementById('reader-content'),rInd=document.getElementById('reader-indicator'),rPrev=document.getElementById('reader-prev'),rNext=document.getElementById('reader-next'),rCloseB=document.getElementById('reader-close');
+// ページは {html, title} の並び。通して読むときは複数の物語がつながる。
 let pages=[],curPage=0;
-function showPage(i){rContent.classList.add('turning');setTimeout(()=>{rContent.innerHTML=pages[i].innerHTML;rBody.scrollLeft=0;rContent.classList.remove('turning')},280);curPage=i;rInd.textContent=(i+1)+' / '+pages.length;rNext.disabled=i>=pages.length-1;rPrev.disabled=i<=0}
-document.querySelectorAll('.preview-card').forEach(card=>{card.addEventListener('click',()=>{const tpl=document.getElementById(card.dataset.story);if(!tpl)return;stopBgm();pages=Array.from(tpl.content.querySelectorAll('.page'));curPage=0;rTitle.textContent=card.dataset.title;rContent.innerHTML=pages[0].innerHTML;rInd.textContent='1 / '+pages.length;rPrev.disabled=true;rNext.disabled=pages.length<=1;reader.style.display='flex';requestAnimationFrame(()=>reader.classList.add('open'));document.body.style.overflow='hidden'})});
+function showPage(i){
+  rContent.classList.add('turning');
+  setTimeout(()=>{rContent.innerHTML=pages[i].html;rBody.scrollLeft=0;rContent.classList.remove('turning')},280);
+  curPage=i;
+  rTitle.textContent=pages[i].title;
+  rInd.textContent=(i+1)+' / '+pages.length;
+  rNext.disabled=i>=pages.length-1;rPrev.disabled=i<=0;
+}
+// 一篇分のページを取り出す。withBreak=true なら扉のページを先頭に足す
+function storyPages(storyId,title,chapter,withBreak){
+  const tpl=document.getElementById(storyId);
+  if(!tpl)return [];
+  const list=Array.from(tpl.content.querySelectorAll('.page')).map(p=>({html:p.innerHTML,title:title}));
+  if(withBreak&&list.length){
+    list.unshift({html:'<div class="story-break"><div class="story-break-chapter">'+chapter+'</div><div class="story-break-title">'+title+'</div></div>',title:title});
+  }
+  return list;
+}
+function openReader(list){
+  if(!list.length)return;
+  stopBgm();
+  pages=list;curPage=0;
+  rTitle.textContent=pages[0].title;
+  rContent.innerHTML=pages[0].html;
+  rBody.scrollLeft=0;
+  rInd.textContent='1 / '+pages.length;
+  rPrev.disabled=true;rNext.disabled=pages.length<=1;
+  reader.style.display='flex';
+  requestAnimationFrame(()=>reader.classList.add('open'));
+  document.body.style.overflow='hidden';
+}
+// 一篇だけ読む
+document.querySelectorAll('.preview-card').forEach(card=>{
+  card.addEventListener('click',()=>{
+    openReader(storyPages(card.dataset.story,card.dataset.title,'',false));
+  });
+});
+// 彼岸花から十五夜草まで通して読む
+document.getElementById('read-all').addEventListener('click',()=>{
+  const all=[];
+  document.querySelectorAll('.story-section').forEach(sec=>{
+    const card=sec.querySelector('.preview-card');
+    const chapter=(sec.querySelector('.season-label')||{}).textContent||'';
+    if(card)all.push(...storyPages(card.dataset.story,card.dataset.title,chapter.trim(),true));
+  });
+  openReader(all);
+});
 rNext.addEventListener('click',()=>{if(curPage<pages.length-1)showPage(curPage+1)});rPrev.addEventListener('click',()=>{if(curPage>0)showPage(curPage-1)});
 
 // 本文の左半分をタップで次のページ、右半分で前のページ（縦書きは左へ進む）
@@ -840,22 +920,63 @@ function resumeBgm(){
   if(volumeControllable(b))b.volume=0;
   b.play().then(()=>fadeTo(b,1,FADE_IN_MS)).catch(()=>{});
 }
-document.querySelectorAll('.play-btn').forEach(btn=>{const card=btn.closest('.player-card'),audio=card.querySelector('audio'),fill=card.querySelector('.progress-fill'),td=card.querySelector('.time-display'),bar=card.querySelector('.progress-bar');btn.addEventListener('click',()=>{
-  if(cA&&cA!==audio){cA.pause();cB.innerHTML=pI}
-  if(audio.paused){
-    btn.innerHTML=paI;cA=audio;cB=btn;
-    // iOSは操作の直後でないと再生を許可しないため、まず消音のまま鳴らし始め、
-    // BGMが消えきってから頭出しして聞こえるようにする
-    audio.muted=true;
-    audio.play().then(()=>{
-      stopBgm(()=>{if(cA===audio){audio.currentTime=0;audio.muted=false}});
-    }).catch(()=>{td.textContent='音源なし';audio.muted=false;btn.innerHTML=pI});
-  }else{
-    audio.pause();btn.innerHTML=pI;
-  }
+// ── 曲の再生 ──
+// 一曲ずつ聴く場合と、アルバムのように通して聴く場合の両方に対応する。
+const players=[];
+let albumMode=false;
+
+function startTrack(p){
+  if(cA&&cA!==p.audio){cA.pause();cB.innerHTML=pI}
+  p.btn.innerHTML=paI;cA=p.audio;cB=p.btn;
+  // iOSは操作の直後でないと再生を許可しないため、まず消音のまま鳴らし始め、
+  // BGMが消えきってから頭出しして聞こえるようにする
+  p.audio.muted=true;
+  p.audio.play().then(()=>{
+    stopBgm(()=>{if(cA===p.audio){p.audio.currentTime=0;p.audio.muted=false}});
+  }).catch(()=>{
+    p.td.textContent='音源なし';p.audio.muted=false;p.btn.innerHTML=pI;
+    if(albumMode)nextInAlbum(p.index+1);
+  });
+}
+// 次の曲へ。最後まで来たら通し再生を終える
+function nextInAlbum(from){
+  if(!albumMode)return;
+  if(from>=players.length){albumMode=false;resumeBgm();return}
+  const p=players[from];
+  p.audio.muted=false;
+  p.btn.innerHTML=paI;cA=p.audio;cB=p.btn;
+  p.audio.currentTime=0;
+  p.audio.play().catch(()=>{p.td.textContent='音源なし';p.btn.innerHTML=pI;nextInAlbum(from+1)});
+}
+
+document.querySelectorAll('.play-btn').forEach(btn=>{
+  const card=btn.closest('.player-card'),audio=card.querySelector('audio'),
+        fill=card.querySelector('.progress-fill'),td=card.querySelector('.time-display'),
+        bar=card.querySelector('.progress-bar');
+  const p={btn,audio,fill,td,bar,index:players.length};
+  players.push(p);
+
+  btn.addEventListener('click',()=>{
+    if(audio.paused){albumMode=false;startTrack(p)}
+    else{audio.pause();btn.innerHTML=pI}
+  });
+  audio.addEventListener('pause',()=>{setTimeout(()=>{if(!albumMode&&cA===audio&&audio.paused)resumeBgm()},80)});
+  audio.addEventListener('timeupdate',()=>{fill.style.width=(audio.currentTime/audio.duration*100)+'%';td.textContent=fmt(audio.currentTime)+' / '+fmt(audio.duration)});
+  bar.addEventListener('click',e=>{const r=bar.getBoundingClientRect();if(audio.duration)audio.currentTime=((e.clientX-r.left)/r.width)*audio.duration});
+  audio.addEventListener('ended',()=>{
+    btn.innerHTML=pI;fill.style.width='0%';
+    if(albumMode)nextInAlbum(p.index+1);else resumeBgm();
+  });
+  audio.addEventListener('error',()=>{if(albumMode&&cA===audio){btn.innerHTML=pI;nextInAlbum(p.index+1)}});
 });
-// 曲を止めた・聴き終えたらBGMを戻す
-audio.addEventListener('pause',()=>{setTimeout(()=>{if(cA===audio&&audio.paused)resumeBgm()},80)});audio.addEventListener('timeupdate',()=>{fill.style.width=(audio.currentTime/audio.duration*100)+'%';td.textContent=fmt(audio.currentTime)+' / '+fmt(audio.duration)});bar.addEventListener('click',e=>{const r=bar.getBoundingClientRect();if(audio.duration)audio.currentTime=((e.clientX-r.left)/r.width)*audio.duration});audio.addEventListener('ended',()=>{btn.innerHTML=pI;fill.style.width='0%';resumeBgm()})});
+
+// 通して聴く：iOSでは各要素を操作の流れの中で解錠しておく必要がある
+document.getElementById('play-all').addEventListener('click',()=>{
+  if(!players.length)return;
+  players.forEach(p=>{if(p.audio!==players[0].audio)primeAudio(p.audio)});
+  albumMode=true;
+  startTrack(players[0]);
+});
 </script>
 
 
