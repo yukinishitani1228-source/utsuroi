@@ -652,6 +652,23 @@ function renderBook(progress){
 let animPlaying=false;
 let animDone=false;
 
+// 縦スクロールを解放する。
+// overflow指定だと横方向まで auto に戻ってしまうので縦だけ開ける。
+// またiOSは閉じていた状態からの切り替えをすぐ認識せず、
+// 最初の指の動きが捨てられることがあるため、
+// レイアウトをやり直させたうえで一度だけ位置を動かして認識させる。
+function unlockScroll(){
+  const de=document.documentElement;
+  de.style.overflowY='auto';
+  document.body.style.overflowY='auto';
+  requestAnimationFrame(()=>{
+    void de.offsetHeight;
+    const y=de.scrollTop;
+    de.scrollTop=y+1;
+    de.scrollTop=y;
+  });
+}
+
 // 音量は音源ファイル自体に焼き込んである（BGM 0.4 / 効果音 0.7）。
 // iOSは audio.volume を無視するためWeb Audioで制御していたが、
 // AudioContextのサンプリングレート不一致で音程がずれる不具合が出るため
@@ -710,10 +727,6 @@ function playAnimation(){
     }else{
       animDone=true;
       animPlaying=false;
-      // overflow指定だと横方向まで auto に戻ってしまうので縦だけ解放する。
-      // htmlとbodyの両方を開けないとスクロールできない。
-      document.documentElement.style.overflowY='auto';
-      document.body.style.overflowY='auto';
       // 拡大・回転したまま残るとドキュメント幅を広げてしまうので消す
       titleOverlay.style.display='none';
       titleOverlay.style.transform='';
@@ -724,6 +737,7 @@ function playAnimation(){
       bookShadow.style.display='none';
       bookStage.style.perspective='';
       document.getElementById('book-scene').classList.add('toc-flow');
+      unlockScroll();
     }
   }
   requestAnimationFrame(frame);
@@ -920,8 +934,7 @@ function closeReader(){
     // overflowを空にするとCSSのhiddenに戻りページがスクロールできなくなる。
     // 横は閉じたまま縦だけ解放し直す。
     document.body.style.overflow='';
-    document.body.style.overflowY='auto';
-    document.documentElement.style.overflowY='auto';
+    unlockScroll();
   },400);
 }
 rCloseB.addEventListener('click',closeReader);
