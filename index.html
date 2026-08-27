@@ -820,7 +820,9 @@ chapterBtns.forEach(btn=>{
   });
 });
 
-const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')})},{threshold:.15});
+// 画面に入る手前から表示を始める。判定が遅いと、スクロールしても
+// 何も現れないように見えてしまうため。
+const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')})},{threshold:0,rootMargin:'200px 0px'});
 document.querySelectorAll('.story-section').forEach(s=>obs.observe(s));
 
 // リーダー
