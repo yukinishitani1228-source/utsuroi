@@ -171,23 +171,6 @@
     .toc-stories a:hover{color:var(--accent-red)}
     .toc-tbd span{color:#c0b8ae}
 
-    /* 通して読むときに挟む扉のページ。
-       本文は左詰めで流れるため、扉だけは読書領域いっぱいに広げて中央に置く。 */
-    .story-break{
-      position:absolute;
-      inset:0;
-      display:flex;flex-direction:column;
-      align-items:center;justify-content:center;
-    }
-    .story-break-chapter{
-      font-family:'Shippori Mincho B1',serif;
-      font-size:.78rem;color:#b8683e;letter-spacing:.35em;
-      margin-left:1.6em;
-    }
-    .story-break-title{
-      font-family:'Shippori Mincho B1',serif;font-weight:600;
-      font-size:1.6rem;color:#2a2520;letter-spacing:.22em;
-    }
 
     /* ===================================================
        【表紙 ── 正面からでも「本」に見えるデザイン】
@@ -836,49 +819,28 @@ function showPage(i){
   rInd.textContent=(i+1)+' / '+pages.length;
   rNext.disabled=i>=pages.length-1;rPrev.disabled=i<=0;
 }
-// 一篇分のページを取り出す。withBreak=true なら扉のページを先頭に足す
-function storyPages(storyId,title,chapter,withBreak){
+// 一篇分のページを取り出す
+function storyPages(storyId,title){
   const tpl=document.getElementById(storyId);
   if(!tpl)return [];
-  const list=Array.from(tpl.content.querySelectorAll('.page')).map(p=>({html:p.innerHTML,title:title}));
-  if(withBreak&&list.length){
-    list.unshift({html:'<div class="story-break"><div class="story-break-chapter">'+chapter+'</div><div class="story-break-title">'+title+'</div></div>',title:title});
-  }
-  return list;
+  return Array.from(tpl.content.querySelectorAll('.page')).map(p=>({html:p.innerHTML,title:title}));
 }
-function openReader(list,start){
+function openReader(list){
   if(!list.length)return;
   stopBgm();
-  const i=Math.min(Math.max(start||0,0),list.length-1);
-  pages=list;curPage=i;
-  rTitle.textContent=pages[i].title;
+  pages=list;curPage=0;
+  rTitle.textContent=pages[0].title;
   rContent.classList.remove('turning');
-  setPageContent(pages[i].html);
-  rInd.textContent=(i+1)+' / '+pages.length;
-  rPrev.disabled=i<=0;rNext.disabled=i>=pages.length-1;
+  setPageContent(pages[0].html);
+  rInd.textContent='1 / '+pages.length;
+  rPrev.disabled=true;rNext.disabled=pages.length<=1;
   reader.style.display='flex';
   requestAnimationFrame(()=>reader.classList.add('open'));
 }
-// 全篇を一冊として組み立て、各物語の開始位置も返す。
-// 一篇だけ読むときも同じ並びを使うので、読み終えるとそのまま次の物語へ続く。
-function buildBook(){
-  const all=[],starts={};
-  document.querySelectorAll('.story-section').forEach(sec=>{
-    const card=sec.querySelector('.preview-card');
-    if(!card)return;
-    const chapter=((sec.querySelector('.season-label')||{}).textContent||'').trim();
-    const list=storyPages(card.dataset.story,card.dataset.title,chapter,true);
-    if(!list.length)return;
-    starts[card.dataset.story]=all.length+1; // 扉の次＝本文の一ページ目
-    all.push.apply(all,list);
-  });
-  return {all:all,starts:starts};
-}
-// 選んだ物語から読み始める。読み終えればそのまま次の物語へ続く。
+// 一篇だけ読む
 document.querySelectorAll('.preview-card').forEach(card=>{
   card.addEventListener('click',()=>{
-    const book=buildBook();
-    openReader(book.all,book.starts[card.dataset.story]);
+    openReader(storyPages(card.dataset.story,card.dataset.title));
   });
 });
 rNext.addEventListener('click',()=>{if(curPage<pages.length-1)showPage(curPage+1)});rPrev.addEventListener('click',()=>{if(curPage>0)showPage(curPage-1)});
@@ -971,76 +933,30 @@ function resumeBgm(){
   b.play().then(()=>fadeTo(b,1,FADE_IN_MS)).catch(()=>{});
 }
 // ── 曲の再生 ──
-// アルバムと同じように、曲が終われば次の曲が鳴る。
-// 一曲だけ聴きたいときは、止めればそこで終わる。
-const players=[];
-let advancing=false,primed=false;
-
-// iOSは操作の直後でないと再生を許可しないため、
-// 最初に再生ボタンを押した流れの中で全曲を解錠しておく。
-// これをしないと、曲が終わって次へ進むときに拒否される。
-function primeAllTracks(){
-  if(primed)return;
-  primed=true;
-  players.forEach(p=>{if(p.audio!==cA)primeAudio(p.audio)});
-}
-
-function startTrack(p,fromTop){
-  advancing=true;
-  if(cA&&cA!==p.audio){cA.pause();cB.innerHTML=pI}
-  p.btn.innerHTML=paI;cA=p.audio;cB=p.btn;
-  // BGMが消えきるまでは消音のまま鳴らし、消えてから頭出しして聞かせる
-  p.audio.muted=true;
-  p.audio.play().then(()=>{
-    stopBgm(()=>{
-      if(cA===p.audio){p.audio.currentTime=0;p.audio.muted=false}
-      advancing=false;
-    });
-  }).catch(()=>{
-    p.td.textContent='音源なし';p.audio.muted=false;p.btn.innerHTML=pI;
-    advancing=false;
-    if(fromTop)nextTrack(p.index+1);
-  });
-}
-
-// 次の曲へ。最後まで来たらBGMに戻る。音源が無い曲は飛ばす。
-function nextTrack(from){
-  if(from>=players.length){advancing=false;resumeBgm();return}
-  const p=players[from];
-  advancing=true;
-  p.audio.muted=false;
-  p.btn.innerHTML=paI;cA=p.audio;cB=p.btn;
-  p.audio.currentTime=0;
-  p.audio.play().then(()=>{advancing=false}).catch(()=>{
-    p.td.textContent='音源なし';p.btn.innerHTML=pI;
-    nextTrack(from+1);
-  });
-}
-
+// 一曲ずつ聴く。曲が終わったらBGMに戻る。
 document.querySelectorAll('.play-btn').forEach(btn=>{
   const card=btn.closest('.player-card'),audio=card.querySelector('audio'),
         fill=card.querySelector('.progress-fill'),td=card.querySelector('.time-display'),
         bar=card.querySelector('.progress-bar');
-  const p={btn,audio,fill,td,bar,index:players.length};
-  players.push(p);
 
   btn.addEventListener('click',()=>{
-    if(audio.paused){primeAllTracks();startTrack(p,true)}
-    else{audio.pause();btn.innerHTML=pI}
+    if(cA&&cA!==audio){cA.pause();cB.innerHTML=pI}
+    if(audio.paused){
+      btn.innerHTML=paI;cA=audio;cB=btn;
+      // BGMが消えきるまでは消音のまま鳴らし、消えてから頭出しして聞かせる
+      audio.muted=true;
+      audio.play().then(()=>{
+        stopBgm(()=>{if(cA===audio){audio.currentTime=0;audio.muted=false}});
+      }).catch(()=>{td.textContent='音源なし';audio.muted=false;btn.innerHTML=pI});
+    }else{
+      audio.pause();btn.innerHTML=pI;
+    }
   });
-  // 自分で止めたときだけBGMを戻す。曲の切り替え中は戻さない。
-  audio.addEventListener('pause',()=>{setTimeout(()=>{
-    if(!advancing&&cA===audio&&audio.paused&&!audio.ended)resumeBgm();
-  },80)});
+  // 曲を止めた・聴き終えたらBGMを戻す
+  audio.addEventListener('pause',()=>{setTimeout(()=>{if(cA===audio&&audio.paused)resumeBgm()},80)});
   audio.addEventListener('timeupdate',()=>{fill.style.width=(audio.currentTime/audio.duration*100)+'%';td.textContent=fmt(audio.currentTime)+' / '+fmt(audio.duration)});
   bar.addEventListener('click',e=>{const r=bar.getBoundingClientRect();if(audio.duration)audio.currentTime=((e.clientX-r.left)/r.width)*audio.duration});
-  audio.addEventListener('ended',()=>{
-    btn.innerHTML=pI;fill.style.width='0%';
-    nextTrack(p.index+1);
-  });
-  audio.addEventListener('error',()=>{
-    if(cA===audio&&advancing){btn.innerHTML=pI;nextTrack(p.index+1)}
-  });
+  audio.addEventListener('ended',()=>{btn.innerHTML=pI;fill.style.width='0%';resumeBgm()});
 });
 </script>
 
