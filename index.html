@@ -15,13 +15,17 @@
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
     /* 3D変換で画面外にはみ出した要素が横スクロール領域を作ると、
        スマホでページ全体が縮小表示されてしまうため横方向は常に閉じる */
-    /* 縦のスクロールは常に開けておく。
+    /* スクロールは常に開けておく。
        overflowを閉じたり開けたりすると、iOSが変化をすぐ認識せず
        解放直後の最初の指の動きが捨てられてしまうため。
        表紙の間は本文自体を隠してページを画面1枚分に保ち、
-       スクロールする先が無い状態にする。 */
-    html{scroll-behavior:smooth;overflow-x:hidden}
-    body{background:var(--bg-void);color:var(--text-main);font-family:'Zen Kaku Gothic New',sans-serif;font-weight:300;line-height:1.9;letter-spacing:.03em;overflow-x:hidden}
+       スクロールする先が無い状態にする。
+
+       html に overflow-x:hidden を付けるとiOSでスクロールが
+       引っかかるため付けない。横のはみ出しは .book-scene 側で
+       切り取っているので、ここで塞ぐ必要はない。 */
+    html{scroll-behavior:smooth}
+    body{background:var(--bg-void);color:var(--text-main);font-family:'Zen Kaku Gothic New',sans-serif;font-weight:300;line-height:1.9;letter-spacing:.03em}
     body.locked .story-section{display:none}
 
 /* ===================================================
