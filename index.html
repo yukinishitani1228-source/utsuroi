@@ -171,18 +171,6 @@
     .toc-stories a:hover{color:var(--accent-red)}
     .toc-tbd span{color:#c0b8ae}
 
-    /* 通して聴く／通して読む */
-    .toc-actions{display:flex;gap:.9rem;margin-top:2rem;flex-wrap:wrap;justify-content:center}
-    .toc-action{
-      font-family:'Shippori Mincho B1',serif;
-      font-size:.78rem;letter-spacing:.18em;
-      color:#5a5550;background:transparent;
-      border:1px solid #ddd5c8;border-radius:2px;
-      padding:.62rem 1.3rem;cursor:pointer;
-      transition:color .3s,border-color .3s;
-    }
-    .toc-action:hover{color:#b8683e;border-color:#c8a487}
-
     /* 通して読むときに挟む扉のページ。
        本文は左詰めで流れるため、扉だけは読書領域いっぱいに広げて中央に置く。 */
     .story-break{
@@ -419,7 +407,6 @@
       .toc-inner{padding:2rem 1.25rem}
       .toc-label{margin-bottom:1rem}
       .toc-title{margin-bottom:1.1rem}
-      .toc-actions{margin-top:1.3rem}
     }
     /* PCでは目次を大きめに */
     @media(min-width:768px){
@@ -537,13 +524,7 @@
             </div>
           </li>
 
-        </ul>
-
-        <div class="toc-actions">
-          <button class="toc-action" type="button" id="play-all">通して聴く</button>
-          <button class="toc-action" type="button" id="read-all">通して読む</button>
-        </div>
-      </div>
+        </ul>      </div>
     </div>
 
   </div>
@@ -865,33 +846,40 @@ function storyPages(storyId,title,chapter,withBreak){
   }
   return list;
 }
-function openReader(list){
+function openReader(list,start){
   if(!list.length)return;
   stopBgm();
-  pages=list;curPage=0;
-  rTitle.textContent=pages[0].title;
+  const i=Math.min(Math.max(start||0,0),list.length-1);
+  pages=list;curPage=i;
+  rTitle.textContent=pages[i].title;
   rContent.classList.remove('turning');
-  setPageContent(pages[0].html);
-  rInd.textContent='1 / '+pages.length;
-  rPrev.disabled=true;rNext.disabled=pages.length<=1;
+  setPageContent(pages[i].html);
+  rInd.textContent=(i+1)+' / '+pages.length;
+  rPrev.disabled=i<=0;rNext.disabled=i>=pages.length-1;
   reader.style.display='flex';
   requestAnimationFrame(()=>reader.classList.add('open'));
 }
-// 一篇だけ読む
-document.querySelectorAll('.preview-card').forEach(card=>{
-  card.addEventListener('click',()=>{
-    openReader(storyPages(card.dataset.story,card.dataset.title,'',false));
-  });
-});
-// 彼岸花から十五夜草まで通して読む
-document.getElementById('read-all').addEventListener('click',()=>{
-  const all=[];
+// 全篇を一冊として組み立て、各物語の開始位置も返す。
+// 一篇だけ読むときも同じ並びを使うので、読み終えるとそのまま次の物語へ続く。
+function buildBook(){
+  const all=[],starts={};
   document.querySelectorAll('.story-section').forEach(sec=>{
     const card=sec.querySelector('.preview-card');
-    const chapter=(sec.querySelector('.season-label')||{}).textContent||'';
-    if(card)all.push(...storyPages(card.dataset.story,card.dataset.title,chapter.trim(),true));
+    if(!card)return;
+    const chapter=((sec.querySelector('.season-label')||{}).textContent||'').trim();
+    const list=storyPages(card.dataset.story,card.dataset.title,chapter,true);
+    if(!list.length)return;
+    starts[card.dataset.story]=all.length+1; // 扉の次＝本文の一ページ目
+    all.push.apply(all,list);
   });
-  openReader(all);
+  return {all:all,starts:starts};
+}
+// 選んだ物語から読み始める。読み終えればそのまま次の物語へ続く。
+document.querySelectorAll('.preview-card').forEach(card=>{
+  card.addEventListener('click',()=>{
+    const book=buildBook();
+    openReader(book.all,book.starts[card.dataset.story]);
+  });
 });
 rNext.addEventListener('click',()=>{if(curPage<pages.length-1)showPage(curPage+1)});rPrev.addEventListener('click',()=>{if(curPage>0)showPage(curPage-1)});
 
@@ -983,32 +971,50 @@ function resumeBgm(){
   b.play().then(()=>fadeTo(b,1,FADE_IN_MS)).catch(()=>{});
 }
 // ── 曲の再生 ──
-// 一曲ずつ聴く場合と、アルバムのように通して聴く場合の両方に対応する。
+// アルバムと同じように、曲が終われば次の曲が鳴る。
+// 一曲だけ聴きたいときは、止めればそこで終わる。
 const players=[];
-let albumMode=false;
+let advancing=false,primed=false;
 
-function startTrack(p){
+// iOSは操作の直後でないと再生を許可しないため、
+// 最初に再生ボタンを押した流れの中で全曲を解錠しておく。
+// これをしないと、曲が終わって次へ進むときに拒否される。
+function primeAllTracks(){
+  if(primed)return;
+  primed=true;
+  players.forEach(p=>{if(p.audio!==cA)primeAudio(p.audio)});
+}
+
+function startTrack(p,fromTop){
+  advancing=true;
   if(cA&&cA!==p.audio){cA.pause();cB.innerHTML=pI}
   p.btn.innerHTML=paI;cA=p.audio;cB=p.btn;
-  // iOSは操作の直後でないと再生を許可しないため、まず消音のまま鳴らし始め、
-  // BGMが消えきってから頭出しして聞こえるようにする
+  // BGMが消えきるまでは消音のまま鳴らし、消えてから頭出しして聞かせる
   p.audio.muted=true;
   p.audio.play().then(()=>{
-    stopBgm(()=>{if(cA===p.audio){p.audio.currentTime=0;p.audio.muted=false}});
+    stopBgm(()=>{
+      if(cA===p.audio){p.audio.currentTime=0;p.audio.muted=false}
+      advancing=false;
+    });
   }).catch(()=>{
     p.td.textContent='音源なし';p.audio.muted=false;p.btn.innerHTML=pI;
-    if(albumMode)nextInAlbum(p.index+1);
+    advancing=false;
+    if(fromTop)nextTrack(p.index+1);
   });
 }
-// 次の曲へ。最後まで来たら通し再生を終える
-function nextInAlbum(from){
-  if(!albumMode)return;
-  if(from>=players.length){albumMode=false;resumeBgm();return}
+
+// 次の曲へ。最後まで来たらBGMに戻る。音源が無い曲は飛ばす。
+function nextTrack(from){
+  if(from>=players.length){advancing=false;resumeBgm();return}
   const p=players[from];
+  advancing=true;
   p.audio.muted=false;
   p.btn.innerHTML=paI;cA=p.audio;cB=p.btn;
   p.audio.currentTime=0;
-  p.audio.play().catch(()=>{p.td.textContent='音源なし';p.btn.innerHTML=pI;nextInAlbum(from+1)});
+  p.audio.play().then(()=>{advancing=false}).catch(()=>{
+    p.td.textContent='音源なし';p.btn.innerHTML=pI;
+    nextTrack(from+1);
+  });
 }
 
 document.querySelectorAll('.play-btn').forEach(btn=>{
@@ -1019,25 +1025,22 @@ document.querySelectorAll('.play-btn').forEach(btn=>{
   players.push(p);
 
   btn.addEventListener('click',()=>{
-    if(audio.paused){albumMode=false;startTrack(p)}
+    if(audio.paused){primeAllTracks();startTrack(p,true)}
     else{audio.pause();btn.innerHTML=pI}
   });
-  audio.addEventListener('pause',()=>{setTimeout(()=>{if(!albumMode&&cA===audio&&audio.paused)resumeBgm()},80)});
+  // 自分で止めたときだけBGMを戻す。曲の切り替え中は戻さない。
+  audio.addEventListener('pause',()=>{setTimeout(()=>{
+    if(!advancing&&cA===audio&&audio.paused&&!audio.ended)resumeBgm();
+  },80)});
   audio.addEventListener('timeupdate',()=>{fill.style.width=(audio.currentTime/audio.duration*100)+'%';td.textContent=fmt(audio.currentTime)+' / '+fmt(audio.duration)});
   bar.addEventListener('click',e=>{const r=bar.getBoundingClientRect();if(audio.duration)audio.currentTime=((e.clientX-r.left)/r.width)*audio.duration});
   audio.addEventListener('ended',()=>{
     btn.innerHTML=pI;fill.style.width='0%';
-    if(albumMode)nextInAlbum(p.index+1);else resumeBgm();
+    nextTrack(p.index+1);
   });
-  audio.addEventListener('error',()=>{if(albumMode&&cA===audio){btn.innerHTML=pI;nextInAlbum(p.index+1)}});
-});
-
-// 通して聴く：iOSでは各要素を操作の流れの中で解錠しておく必要がある
-document.getElementById('play-all').addEventListener('click',()=>{
-  if(!players.length)return;
-  players.forEach(p=>{if(p.audio!==players[0].audio)primeAudio(p.audio)});
-  albumMode=true;
-  startTrack(players[0]);
+  audio.addEventListener('error',()=>{
+    if(cA===audio&&advancing){btn.innerHTML=pI;nextTrack(p.index+1)}
+  });
 });
 </script>
 
