@@ -965,8 +965,18 @@ document.querySelectorAll('.play-btn').forEach(btn=>{
 
   // 曲を止めた・聴き終えたらBGMを戻す
   audio.addEventListener('pause',()=>{setTimeout(()=>{if(cA===audio&&audio.paused)resumeBgm()},80)});
-  audio.addEventListener('timeupdate',()=>{const d=total();fill.style.width=(d?audio.currentTime/d*100:0)+'%';showTime()});
-  bar.addEventListener('click',e=>{const r=bar.getBoundingClientRect(),d=total();if(d)audio.currentTime=((e.clientX-r.left)/r.width)*d});
+  audio.addEventListener('timeupdate',()=>{
+    // 進捗はブラウザ自身が把握している長さを優先する。
+    // 表示用の長さとずれていても、バーは曲の終わりぴったりで満ちる。
+    const d=(isFinite(audio.duration)&&audio.duration>0)?audio.duration:total();
+    fill.style.width=(d?Math.min(100,audio.currentTime/d*100):0)+'%';
+    showTime();
+  });
+  bar.addEventListener('click',e=>{
+    const r=bar.getBoundingClientRect();
+    const d=(isFinite(audio.duration)&&audio.duration>0)?audio.duration:total();
+    if(d)audio.currentTime=((e.clientX-r.left)/r.width)*d;
+  });
   audio.addEventListener('ended',()=>{btn.innerHTML=pI;fill.style.width='0%';showTime();resumeBgm()});
 });
 </script>
