@@ -306,7 +306,17 @@
     /* ===================================================
        【各章セクション】
     =================================================== */
-    .story-section{min-height:100vh;min-height:100svh;padding:8rem 1.5rem 6rem;display:flex;justify-content:center;position:relative;opacity:0;transform:translateY(30px);transition:opacity .8s ease,transform .8s ease;background:#f7f3ea}
+    /* ── 曲の雰囲気を映す背景 ──
+       再生中の曲のジャケ写から色を読み取り、画面全体に淡く敷く。
+       本文より奥にあるので、文字の読みやすさは変わらない。 */
+    .ambient{
+      position:fixed;inset:0;z-index:0;
+      opacity:0;
+      transition:opacity 1.6s ease;
+      pointer-events:none;
+    }
+    /* 背景を透かすためセクション自体は色を持たない */
+    .story-section{min-height:100vh;min-height:100svh;padding:8rem 1.5rem 6rem;display:flex;justify-content:center;position:relative;z-index:1;opacity:0;transform:translateY(30px);transition:opacity .8s ease,transform .8s ease}
     .story-section.visible{opacity:1;transform:translateY(0)}
     .story-section::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:1px;height:80px;background:linear-gradient(to bottom,transparent,#e0dbd4)}
     .story-inner{max-width:720px;width:100%}
@@ -415,6 +425,8 @@
   </style>
 </head>
 <body class="locked">
+
+<div class="ambient" id="ambient" aria-hidden="true"></div>
 
 
 <div class="book-scene" id="book-scene">
@@ -943,6 +955,61 @@ function resumeBgm(){
   if(volumeControllable(b))b.volume=0;
   b.play().then(()=>fadeTo(b,1,FADE_IN_MS)).catch(()=>{});
 }
+// ── 曲の雰囲気を映す背景 ──
+// ジャケ写を小さく描き直して上下の平均色を取り、
+// それを縦のグラデーションとして画面全体に淡く敷く。
+const ambient=document.getElementById('ambient');
+const moodCache=new Map();
+let ambientTimer=null;
+
+// 平均色はくすみやすいので、彩度を少し持ち上げる
+function vivid(r,g,b){
+  const mid=(Math.max(r,g,b)+Math.min(r,g,b))/2,k=1.55;
+  const f=v=>Math.round(Math.min(255,Math.max(0,mid+(v-mid)*k)));
+  return 'rgb('+f(r)+','+f(g)+','+f(b)+')';
+}
+function readMood(img){
+  const key=img.getAttribute('src');
+  if(moodCache.has(key))return moodCache.get(key);
+  try{
+    const S=24,c=document.createElement('canvas');
+    c.width=S;c.height=S;
+    const ctx=c.getContext('2d',{willReadFrequently:true});
+    ctx.drawImage(img,0,0,S,S);
+    const d=ctx.getImageData(0,0,S,S).data;
+    const band=(y0,y1)=>{
+      let r=0,g=0,b=0,n=0;
+      for(let y=y0;y<y1;y++)for(let x=0;x<S;x++){
+        const i=(y*S+x)*4;r+=d[i];g+=d[i+1];b+=d[i+2];n++;
+      }
+      return vivid(r/n,g/n,b/n);
+    };
+    const mood='linear-gradient(to bottom,'+band(0,11)+','+band(13,S)+')';
+    moodCache.set(key,mood);
+    return mood;
+  }catch(e){return null}
+}
+function setAmbient(card){
+  const img=card.querySelector('.jacket-art img');
+  if(!img)return clearAmbient();
+  const apply=()=>{
+    const mood=readMood(img);
+    if(!mood)return;
+    clearTimeout(ambientTimer);
+    // 既に色が出ているときは、一度引いてから次の色にする
+    if(parseFloat(ambient.style.opacity)>0){
+      ambient.style.opacity='0';
+      ambientTimer=setTimeout(()=>{ambient.style.background=mood;ambient.style.opacity='.16'},700);
+    }else{
+      ambient.style.background=mood;
+      ambient.style.opacity='.16';
+    }
+  };
+  if(img.complete&&img.naturalWidth)apply();
+  else img.addEventListener('load',apply,{once:true});
+}
+function clearAmbient(){clearTimeout(ambientTimer);ambient.style.opacity='0'}
+
 // ── 曲の再生 ──
 // 一曲ずつ聴く。曲が終わったらBGMに戻る。
 document.querySelectorAll('.play-btn').forEach(btn=>{
@@ -957,7 +1024,7 @@ document.querySelectorAll('.play-btn').forEach(btn=>{
       // BGMが消えきるまでは消音のまま鳴らし、消えてから頭出しして聞かせる
       audio.muted=true;
       audio.play().then(()=>{
-        stopBgm(()=>{if(cA===audio){audio.currentTime=0;audio.muted=false}});
+        stopBgm(()=>{if(cA===audio){audio.currentTime=0;audio.muted=false;setAmbient(card)}});
       }).catch(()=>{td.textContent='音源なし';audio.muted=false;btn.innerHTML=pI});
     }else{
       audio.pause();btn.innerHTML=pI;
@@ -974,8 +1041,8 @@ document.querySelectorAll('.play-btn').forEach(btn=>{
   if(audio.dataset.duration)showTime();
   else audio.addEventListener('loadedmetadata',showTime,{once:true});
 
-  // 曲を止めた・聴き終えたらBGMを戻す
-  audio.addEventListener('pause',()=>{setTimeout(()=>{if(cA===audio&&audio.paused)resumeBgm()},80)});
+  // 曲を止めた・聴き終えたらBGMを戻し、背景の色も引く
+  audio.addEventListener('pause',()=>{setTimeout(()=>{if(cA===audio&&audio.paused){resumeBgm();clearAmbient()}},80)});
   audio.addEventListener('timeupdate',()=>{
     // 進捗はブラウザ自身が把握している長さを優先する。
     // 表示用の長さとずれていても、バーは曲の終わりぴったりで満ちる。
@@ -988,7 +1055,7 @@ document.querySelectorAll('.play-btn').forEach(btn=>{
     const d=(isFinite(audio.duration)&&audio.duration>0)?audio.duration:total();
     if(d)audio.currentTime=((e.clientX-r.left)/r.width)*d;
   });
-  audio.addEventListener('ended',()=>{btn.innerHTML=pI;fill.style.width='0%';showTime();resumeBgm()});
+  audio.addEventListener('ended',()=>{btn.innerHTML=pI;fill.style.width='0%';showTime();resumeBgm();clearAmbient()});
 });
 </script>
 
