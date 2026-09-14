@@ -306,7 +306,19 @@
     /* ===================================================
        【各章セクション】
     =================================================== */
-    .story-section{min-height:100vh;min-height:100svh;padding:8rem 1.5rem 6rem;display:flex;justify-content:center;position:relative;opacity:0;transform:translateY(30px);transition:opacity .8s ease,transform .8s ease;background:#f7f3ea}
+    /* ── 再生中の曲のジャケ写を背景に広げる ──
+       正方形の絵を画面に合わせるので、PCでは上下、スマホでは左右が切れる。
+       クリーム色の覆いを重ねて、文字は今までどおりの濃さで読める。 */
+    .stage-bg{
+      position:fixed;inset:0;z-index:0;
+      background-size:cover;
+      background-position:center;
+      opacity:0;
+      transition:opacity 1.6s ease;
+      pointer-events:none;
+    }
+    /* 背景を透かすためセクション自体は色を持たない */
+    .story-section{min-height:100vh;min-height:100svh;padding:8rem 1.5rem 6rem;display:flex;justify-content:center;position:relative;z-index:1;opacity:0;transform:translateY(30px);transition:opacity .8s ease,transform .8s ease}
     .story-section.visible{opacity:1;transform:translateY(0)}
     .story-section::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:1px;height:80px;background:linear-gradient(to bottom,transparent,#e0dbd4)}
     .story-inner{max-width:720px;width:100%}
@@ -415,6 +427,8 @@
   </style>
 </head>
 <body class="locked">
+
+<div class="stage-bg" id="stage-bg" aria-hidden="true"></div>
 
 
 <div class="book-scene" id="book-scene">
@@ -943,6 +957,29 @@ function resumeBgm(){
   if(volumeControllable(b))b.volume=0;
   b.play().then(()=>fadeTo(b,1,FADE_IN_MS)).catch(()=>{});
 }
+// ── 再生中の曲のジャケ写を背景に広げる ──
+const stageBg=document.getElementById('stage-bg');
+const VEIL='rgba(247,243,234,.55)';
+let bgTimer=null;
+function setStageBg(card){
+  const img=card.querySelector('.jacket-art img');
+  if(!img)return clearStageBg();
+  const src=img.getAttribute('src');
+  const apply=()=>{
+    stageBg.style.backgroundImage='linear-gradient('+VEIL+','+VEIL+'),url("'+src+'")';
+    stageBg.style.opacity='1';
+  };
+  clearTimeout(bgTimer);
+  // 既に別の絵が出ているときは、一度引いてから移す
+  if(stageBg.style.opacity==='1'){
+    stageBg.style.opacity='0';
+    bgTimer=setTimeout(apply,700);
+  }else{
+    apply();
+  }
+}
+function clearStageBg(){clearTimeout(bgTimer);stageBg.style.opacity='0'}
+
 // ── 曲の再生 ──
 // 一曲ずつ聴く。曲が終わったらBGMに戻る。
 document.querySelectorAll('.play-btn').forEach(btn=>{
@@ -957,7 +994,7 @@ document.querySelectorAll('.play-btn').forEach(btn=>{
       // BGMが消えきるまでは消音のまま鳴らし、消えてから頭出しして聞かせる
       audio.muted=true;
       audio.play().then(()=>{
-        stopBgm(()=>{if(cA===audio){audio.currentTime=0;audio.muted=false}});
+        stopBgm(()=>{if(cA===audio){audio.currentTime=0;audio.muted=false;setStageBg(card)}});
       }).catch(()=>{td.textContent='音源なし';audio.muted=false;btn.innerHTML=pI});
     }else{
       audio.pause();btn.innerHTML=pI;
@@ -975,7 +1012,7 @@ document.querySelectorAll('.play-btn').forEach(btn=>{
   else audio.addEventListener('loadedmetadata',showTime,{once:true});
 
   // 曲を止めた・聴き終えたらBGMを戻す
-  audio.addEventListener('pause',()=>{setTimeout(()=>{if(cA===audio&&audio.paused)resumeBgm()},80)});
+  audio.addEventListener('pause',()=>{setTimeout(()=>{if(cA===audio&&audio.paused){resumeBgm();clearStageBg()}},80)});
   audio.addEventListener('timeupdate',()=>{
     // 進捗はブラウザ自身が把握している長さを優先する。
     // 表示用の長さとずれていても、バーは曲の終わりぴったりで満ちる。
@@ -988,7 +1025,7 @@ document.querySelectorAll('.play-btn').forEach(btn=>{
     const d=(isFinite(audio.duration)&&audio.duration>0)?audio.duration:total();
     if(d)audio.currentTime=((e.clientX-r.left)/r.width)*d;
   });
-  audio.addEventListener('ended',()=>{btn.innerHTML=pI;fill.style.width='0%';showTime();resumeBgm()});
+  audio.addEventListener('ended',()=>{btn.innerHTML=pI;fill.style.width='0%';showTime();resumeBgm();clearStageBg()});
 });
 </script>
 
