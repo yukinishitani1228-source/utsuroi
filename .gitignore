@@ -21,6 +21,7 @@ _src/
 *.jpg
 *.jpeg
 !*-jacket.png
+!cover-cloth.jpg
 
 # 形式の比較用に一時生成したもの
 _test*
