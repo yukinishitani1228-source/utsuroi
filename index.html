@@ -498,10 +498,7 @@
               <ul>
                 <li><a href="#ajisai">紫陽花</a></li>
                 <li><a href="#gekkabijin">月下美人</a></li>
-                <!-- ▼ 未定の一篇。花が決まったら下の行を書き換えて有効化する
-                     <li><a href="#（英字ID）">（花の名前）</a></li>
-                     あわせて本文セクションのテンプレート（「未定の一篇」で検索）も差し替える -->
-                <li class="toc-tbd"><span>準備中</span></li>
+                <li><a href="#himawari">向日葵</a></li>
               </ul>
             </div>
           </li>
@@ -554,12 +551,8 @@
 <template id="story-ajisai"><div class="page"><p>紫陽花の全文をここに書く。</p></div></template>
 <section class="story-section" id="gekkabijin"><div class="story-inner"><div class="season-label">第四章<i></i><span>夏</span></div><h2 class="story-title">月下美人</h2><div class="player-card"><div class="jacket-art"><img src="gekkabijin-jacket.png" alt="月下美人 ジャケット"></div><div class="player-info"><div class="track-title">月下美人</div><div class="audio-controls"><button class="play-btn" aria-label="再生"><svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg></button><div class="progress-bar"><div class="progress-fill"></div></div><span class="time-display">0:00 / 0:00</span></div><audio preload="metadata" src="gekkabijin.flac" data-duration="282.36"></audio></div></div><div class="preview-card" data-story="story-gekkabijin" data-title="月下美人"><div class="preview-text"><p>月下美人の冒頭をここに書く。</p></div><div class="preview-cta">続きを読む <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></div></div></div></section>
 <template id="story-gekkabijin"><div class="page"><p>月下美人の全文をここに書く。</p></div></template>
-<!-- ▼ 未定の一篇（第四章・夏／月下美人のあと）
-     花が決まったら __ID__ と __NAME__ を書き換えてコメントを外す。
-     あわせて目次側（「未定の一篇」で検索）の準備中の行も差し替える。
-<section class="story-section" id="__ID__"><div class="story-inner"><div class="season-label">第四章<i></i><span>夏</span></div><h2 class="story-title">__NAME__</h2><div class="player-card"><div class="jacket-art"><div class="jacket-placeholder">ジャケ写を<br>ここに配置</div></div><div class="player-info"><div class="track-title">__NAME__</div><div class="audio-controls"><button class="play-btn" aria-label="再生"><svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg></button><div class="progress-bar"><div class="progress-fill"></div></div><span class="time-display">0:00 / 0:00</span></div><audio preload="metadata" src="__ID__.mp3"></audio></div></div><div class="preview-card" data-story="story-__ID__" data-title="__NAME__"><div class="preview-text"><p>__NAME__の冒頭をここに書く。</p></div><div class="preview-cta">続きを読む <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></div></div></div></section>
-<template id="story-__ID__"><div class="page"><p>__NAME__の全文をここに書く。</p></div></template>
--->
+<section class="story-section" id="himawari"><div class="story-inner"><div class="season-label">第四章<i></i><span>夏</span></div><h2 class="story-title">向日葵</h2><div class="player-card"><div class="jacket-art"><div class="jacket-placeholder">ジャケ写を<br>ここに配置</div></div><div class="player-info"><div class="track-title">向日葵</div><div class="audio-controls"><button class="play-btn" aria-label="再生"><svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg></button><div class="progress-bar"><div class="progress-fill"></div></div><span class="time-display">0:00 / 0:00</span></div><audio preload="metadata" src="himawari.flac"></audio></div></div><div class="preview-card" data-story="story-himawari" data-title="向日葵"><div class="preview-text"><p>向日葵の冒頭をここに書く。</p></div><div class="preview-cta">続きを読む <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></div></div></div></section>
+<template id="story-himawari"><div class="page"><p>向日葵の全文をここに書く。</p></div></template>
 
 <section class="story-section" id="jugoya"><div class="story-inner"><div class="season-label">第五章<i></i><span>秋</span></div><h2 class="story-title">十五夜草</h2><div class="player-card"><div class="jacket-art"><img src="jugoya-jacket.png" alt="十五夜草 ジャケット"></div><div class="player-info"><div class="track-title">十五夜草</div><div class="audio-controls"><button class="play-btn" aria-label="再生"><svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg></button><div class="progress-bar"><div class="progress-fill"></div></div><span class="time-display">0:00 / 0:00</span></div><audio preload="metadata" src="jugoya.flac" data-duration="305.36"></audio></div></div><div class="preview-card" data-story="story-jugoya" data-title="十五夜草"><div class="preview-text"><p>十五夜草の冒頭をここに書く。</p></div><div class="preview-cta">続きを読む <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></div></div></div></section>
 <template id="story-jugoya"><div class="page"><p>十五夜草の全文をここに書く。</p></div></template>
@@ -692,26 +685,32 @@ function playAnimation(){
   const duration=5000;
   const startTime=performance.now();
 
+  let opened=false;
   function frame(now){
     const t=Math.min((now-startTime)/duration,1);
-    renderBook(easeInOut(t));
+    const p=easeInOut(t);
+    renderBook(p);
+
+    // 本が完全に透明になった時点(p>=0.85)で一括切替。
+    // 本の非表示・toc-flow追加・スクロール解放を同時に行い、
+    // 空白が見えないようにする。
+    if(!opened&&p>=0.85){
+      opened=true;
+      titleOverlay.style.display='none';
+      titleOverlay.style.transform='';
+      titlePlane.style.transform='';
+      book3d.style.display='none';
+      bookShadow.style.display='none';
+      bookStage.style.perspective='';
+      document.getElementById('book-scene').classList.add('toc-flow');
+      unlockScroll();
+    }
 
     if(t<1){
       requestAnimationFrame(frame);
     }else{
       animDone=true;
       animPlaying=false;
-      // 拡大・回転したまま残るとドキュメント幅を広げてしまうので消す
-      titleOverlay.style.display='none';
-      titleOverlay.style.transform='';
-      titlePlane.style.transform='';
-      // 役目を終えた本を取り除き、目次を通常のページの流れに戻す。
-      // これで入れ子のスクロール領域が無くなり、目次からそのまま下へ進める。
-      book3d.style.display='none';
-      bookShadow.style.display='none';
-      bookStage.style.perspective='';
-      document.getElementById('book-scene').classList.add('toc-flow');
-      unlockScroll();
     }
   }
   requestAnimationFrame(frame);
