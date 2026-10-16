@@ -233,14 +233,14 @@
 
     .cover-frame{
       position:absolute;
-      top:24px;left:20px;bottom:24px;right:48px;
-      border:1px solid rgba(196,164,106,.45);
+      top:20px;left:18px;bottom:20px;right:34px;
+      border:1px solid rgba(196,149,106,.7);
       border-radius:2px;
       pointer-events:none;
     }
     .cover-frame::before{
       content:'';position:absolute;inset:5px;
-      border:1px solid rgba(196,164,106,.15);
+      border:1px solid rgba(196,149,106,.4);
       border-radius:1px;
     }
 
@@ -375,7 +375,7 @@
       .preview-text{height:160px}
       .reader-body{padding:2rem 1.2rem}
       .reader-content p{font-size:.95rem}
-      .cover-frame{top:16px;left:14px;bottom:16px;right:40px}
+      .cover-frame{top:16px;left:14px;bottom:16px;right:28px}
     }
     @media(prefers-reduced-motion:reduce){
       .story-section{opacity:1;transform:none;transition:none}
@@ -384,7 +384,7 @@
     }
     @media(max-width:480px){
       .cover-front{padding:1.2rem!important}
-      .cover-frame{top:14px!important;left:12px!important;bottom:14px!important;right:36px!important}
+      .cover-frame{top:14px!important;left:12px!important;bottom:14px!important;right:26px!important}
       .toc-list{max-width:240px!important}
       /* 目次が画面に収まらないと、目次自身がスクロールを受け取ってしまい
          ページ本体へスクロールできなくなるため、縦の余白を詰める */
